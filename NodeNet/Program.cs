@@ -1,8 +1,12 @@
-﻿var nodeHttpListener = new NodeNet.NodeNet.HttpCommunication.NodeHttpListener();
-nodeHttpListener.ConnectionOpened += (object sender, object connection) => {
-    Console.WriteLine("{0}, {1}", sender, connection);
-};
-nodeHttpListener.StartListening();
-var connection = new NodeNet.NodeNet.HttpCommunication.NodeHttpConnection();
-await connection.Connect($"http://127.0.0.1:8080/");
-while (true);
+﻿using NodeNet.NodeNet;
+using NodeNet.NodeNet.HttpCommunication;
+using NodeNet.NodeNet.RSASigner;
+
+var options = RSAEncryption.CreateSignOptions();
+var node = Node.CreateRSAHttpNode(options);
+
+NodeHttpConnection connection = new NodeHttpConnection();
+bool result = await connection.Connect("ws://localhost:8081/websock");
+
+Console.WriteLine("Is connected? Result: {0}", result.ToString());
+while (true) ;

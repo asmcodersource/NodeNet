@@ -22,7 +22,7 @@ namespace NodeNet.NodeNet.HttpCommunication
             if (IsListening == true)
                 throw new Exception("Multiple listening");
             HttpListener = new HttpListener();
-            HttpListener.Prefixes.Add($"http://*:{ListenPort}/");
+            HttpListener.Prefixes.Add($"http://+:8081/websock/");
             HttpListener.Start();
             ListeningTask = Task.Run(() => Listener());
             IsListening = true;
@@ -46,7 +46,7 @@ namespace NodeNet.NodeNet.HttpCommunication
                     var context = await HttpListener.GetContextAsync();
                     if (context.Request.IsWebSocketRequest != true)
                         continue;
-                    var webSocketContext = await context.AcceptWebSocketAsync("nodenet", new TimeSpan(0, 0, 10));
+                    var webSocketContext = await context.AcceptWebSocketAsync(null, new TimeSpan(0, 0, 10));
                     ConnectionOpened?.Invoke(this, new NodeHttpConnection(webSocketContext));
                 }
             } catch (InvalidOperationException exception) { 

@@ -26,5 +26,10 @@ namespace NodeNet.NodeNet.HttpCommunication
         {
             return clientWebSocket.SendAsync(bytes, type, endOfMessage, cancellationToken);
         }
+
+        public object GetInnerObject()
+        {
+            return clientWebSocket;
+        }
     }
 }

@@ -8,5 +8,6 @@ namespace NodeNet.NodeNet.SignOptions
 {
     internal interface IReceiverSignOptions
     {
+        public string PublicKey { get; protected set; }
     }
 }

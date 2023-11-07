@@ -7,6 +7,8 @@ var node = Node.CreateRSAHttpNode(options);
 
 NodeHttpConnection connection = new NodeHttpConnection();
 bool result = await connection.Connect("ws://localhost:8081/websock");
-
 Console.WriteLine("Is connected? Result: {0}", result.ToString());
+connection.ListenMessages();
+
+node.SendMessage("Hello, world!");
 while (true) ;

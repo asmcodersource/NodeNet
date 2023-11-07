@@ -25,5 +25,10 @@ namespace NodeNet.NodeNet.HttpCommunication
         {
             socket = webSocket;
         }
+
+        public object GetInnerObject()
+        {
+            return socket;
+        }
     }
 }

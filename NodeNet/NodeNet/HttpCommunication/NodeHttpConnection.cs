@@ -17,6 +17,8 @@ namespace NodeNet.NodeNet.HttpCommunication
         public IWebSocket WebSocket { get; protected set; }
         protected Queue<Message.Message> MessagesQueue = new Queue<Message.Message>();
         public event Action<INodeReceiver> MessageReceived;
+        public event Action<INodeReceiver> WebSocketClosed;
+
 
         public NodeHttpConnection()
         {
@@ -60,23 +62,27 @@ namespace NodeNet.NodeNet.HttpCommunication
         {
             var jsonMessage = JsonSerializer.Serialize(message);
             var segment = new ArraySegment<byte>(Encoding.UTF8.GetBytes(jsonMessage));
-            WebSocket.SendAsync(segment, WebSocketMessageType.Binary, true, CancellationToken.None);
+            WebSocket.SendAsync(segment, WebSocketMessageType.Binary, true, CancellationToken.None).Wait();
         }
 
         protected async Task MessageListener() {
-            var buffer = new ArraySegment<byte>();
+            var buffer = new ArraySegment<byte>(new byte[1024*16]);
             try
             {
                 while (IsListening)
                 {
                     var result = await WebSocket.ReceiveAsync(buffer, CancellationToken.None);
+                    if (result.CloseStatus == WebSocketCloseStatus.Empty)
+                        break;
                     if (result.EndOfMessage != true)
                         continue;
-
                     try
                     {
-                        var jsonString = Encoding.UTF8.GetString(buffer.ToArray<byte>());
-                        JsonSerializer.Deserialize<Message.Message>(jsonString);
+                        var jsonString = Encoding.UTF8.GetString(buffer.Take(result.Count).ToArray());
+                        var message = JsonSerializer.Deserialize<Message.Message>(jsonString);
+                        Array.Fill<byte>(buffer.Array, 0, 0, 1024 * 16);
+                        AddMessageToQueue(message);
+                        MessageReceived.Invoke(this);
                     }
                     catch (Exception ex)
                     {
@@ -85,6 +91,8 @@ namespace NodeNet.NodeNet.HttpCommunication
                 }
             } catch (Exception ex)
             {
+                if (IsListening)
+                    WebSocketClosed?.Invoke(this);
                 IsListening = false;
             }
         }

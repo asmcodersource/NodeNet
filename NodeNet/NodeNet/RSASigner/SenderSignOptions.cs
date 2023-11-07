@@ -9,19 +9,13 @@ namespace NodeNet.NodeNet.RSASigner
 {
     internal class SenderSignOptions : ISenderSignOptions
     {
-        public string PublicKey { get; protected set; }
-        public string PrivateKey { get; protected set; }
-        public string KeysXML { get; protected set; }
+        public string PublicKey { get; set; }
+        public string PrivateKey { get; set; }
 
         public SenderSignOptions(string publicKey, string privateKey)
         {
             PublicKey = publicKey;
             PrivateKey = privateKey;
-        }
-
-        public void SetKeysXML(string keys)
-        {
-            KeysXML = keys;
         }
     }
 }

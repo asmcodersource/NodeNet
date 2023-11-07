@@ -33,9 +33,9 @@ namespace NodeNet.NodeNet
             node.MessageSigner = messageSigner;
             node.Connections = new HttpConnections();
             node.ConnectionsListener = new NodeHttpListener();
-
+            node.ConnectionsListener.ConnectionOpened += node.NewConnectionHandler;
             node.ConnectionsListener.StartListening();
-            node.ConnectionsListener.ConnectionOpened += (sender, connection) => { node.Connections.AddConnection(connection as INodeConnection); };
+
             return node;
         }
 
@@ -52,6 +52,27 @@ namespace NodeNet.NodeNet
             MessageSigner.Sign(message);
             foreach (var connection in connections)
                 connection.SendMessage(message);
+        }
+
+        public void Connect(string url)
+        {
+            NodeHttpConnection connection = new NodeHttpConnection();
+            bool result = connection.Connect("ws://localhost:8081/websock");
+            if (result == true)
+                NewConnectionHandler(connection);
+        }
+
+        protected void NewConnectionHandler(INodeConnection nodeConnection)
+        {
+            nodeConnection.WebSocketClosed += Connections.RemoveConnection;
+            nodeConnection.MessageReceived += NewMessageHandler;
+            this.Connections.AddConnection(nodeConnection);
+        }
+
+        protected void NewMessageHandler(INodeReceiver nodeConnection)
+        {
+            // TODO: Analyze package sign, receiver addr, TTL, package cache
+            Console.WriteLine(nodeConnection.GetLastMessage().ToString());
         }
     }
 }

@@ -14,10 +14,10 @@ namespace NodeNet.NodeNet.HttpCommunication
     {
         public bool IsListening { get; set; } = false;
         protected Task? ListeningTask { get; set; } = null;
-        public IWebSocket WebSocket { get; protected set; }
+        public WebSocket WebSocket { get; protected set; }
         protected Queue<Message.Message> MessagesQueue = new Queue<Message.Message>();
-        public event Action<INodeReceiver> MessageReceived;
-        public event Action<INodeReceiver> WebSocketClosed;
+        public event Action<INodeConnection> MessageReceived;
+        public event Action<INodeConnection> WebSocketClosed;
 
 
         public NodeHttpConnection()
@@ -27,16 +27,16 @@ namespace NodeNet.NodeNet.HttpCommunication
 
         public NodeHttpConnection(HttpListenerWebSocketContext context)
         {
-            WebSocket = new WebSocketAdapter(context.WebSocket);
+            WebSocket = context.WebSocket;
         }
         
-        public async Task<bool> Connect( string addr )
+        public bool Connect( string addr )
         {
             ClientWebSocket clientWebSocket = new ClientWebSocket();
-            await clientWebSocket.ConnectAsync(new Uri(addr), CancellationToken.None);
+            clientWebSocket.ConnectAsync(new Uri(addr), CancellationToken.None).Wait();
             if (clientWebSocket.State != WebSocketState.Open)
                 return false;
-            WebSocket = new ClientWebSocketAdapter(clientWebSocket);
+            WebSocket = clientWebSocket as WebSocket;
             return true;
         }
 
@@ -65,6 +65,16 @@ namespace NodeNet.NodeNet.HttpCommunication
             WebSocket.SendAsync(segment, WebSocketMessageType.Binary, true, CancellationToken.None).Wait();
         }
 
+        public void CloseConnection()
+        {
+            if (WebSocket == null)
+                throw new Exception("Socket is not connected");
+            if (IsListening)
+                WebSocketClosed?.Invoke(this);
+            IsListening = false;
+            
+        }
+
         protected async Task MessageListener() {
             var buffer = new ArraySegment<byte>(new byte[1024*16]);
             try
@@ -82,7 +92,7 @@ namespace NodeNet.NodeNet.HttpCommunication
                         var message = JsonSerializer.Deserialize<Message.Message>(jsonString);
                         Array.Fill<byte>(buffer.Array, 0, 0, 1024 * 16);
                         AddMessageToQueue(message);
-                        MessageReceived.Invoke(this);
+                        MessageReceived?.Invoke(this);
                     }
                     catch (Exception ex)
                     {
@@ -91,10 +101,8 @@ namespace NodeNet.NodeNet.HttpCommunication
                 }
             } catch (Exception ex)
             {
-                if (IsListening)
-                    WebSocketClosed?.Invoke(this);
-                IsListening = false;
             }
+            CloseConnection();
         }
 
         protected void AddMessageToQueue(Message.Message message)

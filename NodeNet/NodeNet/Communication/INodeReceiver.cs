@@ -12,6 +12,5 @@ namespace NodeNet.NodeNet.Communication
         Message.Message? GetLastMessage();
         List<Message.Message> GetMessageList();
 
-        public event Action<INodeReceiver> MessageReceived;
     }
 }

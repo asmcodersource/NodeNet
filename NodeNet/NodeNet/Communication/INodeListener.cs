@@ -8,7 +8,7 @@ namespace NodeNet.NodeNet.Communication
 {
     internal interface INodeListener
     {
-        public event EventHandler<object> ConnectionOpened;
+        public event Action<INodeConnection> ConnectionOpened;
         public void StartListening();
         public void StopListening();
     }

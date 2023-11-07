@@ -7,36 +7,9 @@ using System.Threading.Tasks;
 
 namespace NodeNet.NodeNet
 {
-    internal class Node : INodeReceiver, INodeSender
+    internal class Node
     {
-        Message.Message? INodeReceiver.GetLastMessage()
-        {
-            throw new NotImplementedException();
-        }
 
-        List<Message.Message> INodeReceiver.GetMessageList()
-        {
-            throw new NotImplementedException();
-        }
-
-        void INodeSender.SendMessage()
-        {
-            throw new NotImplementedException();
-        }
-
-        void INodeSender.SetSendProperties()
-        {
-            throw new NotImplementedException();
-        }
-
-        void INodeReceiver.StartListening()
-        {
-            throw new NotImplementedException();
-        }
-
-        void INodeReceiver.StopListening()
-        {
-            throw new NotImplementedException();
-        }
+        public event EventHandler MessageReceived;
     }
 }

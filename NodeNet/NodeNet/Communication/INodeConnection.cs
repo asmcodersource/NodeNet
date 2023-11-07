@@ -4,11 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NodeNet.NodeNet
+namespace NodeNet.NodeNet.Communication
 {
-    internal interface INodeSender
+    internal interface INodeConnection : INodeSender, INodeReceiver
     {
-        void SetSendProperties();
-        void SendMessage();
     }
 }

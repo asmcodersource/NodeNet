@@ -5,13 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 using NodeNet.NodeNet.Message;
 
-namespace NodeNet.NodeNet
+namespace NodeNet.NodeNet.Communication
 {
     internal interface INodeReceiver
     {
-        void StartListening();
-        void StopListening();
         Message.Message? GetLastMessage();
         List<Message.Message> GetMessageList();
+
+        public event Action<INodeReceiver> MessageReceived;
     }
 }

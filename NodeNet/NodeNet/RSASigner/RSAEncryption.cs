@@ -24,8 +24,12 @@ namespace NodeNet.NodeNet.RSASigner
         {
             RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
             rsa.FromXmlString(options.PrivateKey);
-            var sign = rsa.SignData(data, new SHA256CryptoServiceProvider());
-            return Convert.ToBase64String(sign);
+            var sign = rsa.SignData(data, SHA256.Create());
+            var signatureString = Convert.ToBase64String(sign);
+            Console.WriteLine("Signature:   " + signatureString);
+            Console.WriteLine("Public key:  " + options.PublicKey);
+            Console.WriteLine("Private key: " + options.PrivateKey);
+            return signatureString;
         }
 
         public static bool VerifySign(byte[] data, string sign, ReceiverSignOptions options)
@@ -33,7 +37,9 @@ namespace NodeNet.NodeNet.RSASigner
             var signBytes = Convert.FromBase64String(sign);
             RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
             rsa.FromXmlString(options.PublicKey);
-            return rsa.VerifyData(data, new SHA256CryptoServiceProvider(), signBytes);
+            Console.WriteLine("Signature:   " + sign);
+            Console.WriteLine("Public key:  " + options.PublicKey);
+            return rsa.VerifyData(data, SHA256.Create(), signBytes);
         }
     }
 }

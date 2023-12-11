@@ -14,6 +14,7 @@ namespace NodeNet.NodeNet.HttpCommunication
         public int ListenPort { get; set; } = 8080;
         protected Task? ListeningTask { get; set; } = null;
         public HttpListener HttpListener { get; protected set; }
+        public HttpListenerOptions Options { get; set; } = new HttpListenerOptions(8080, "websock/");
 
         public event Action<INodeConnection> ConnectionOpened;
 
@@ -22,7 +23,8 @@ namespace NodeNet.NodeNet.HttpCommunication
             if (IsListening == true)
                 throw new Exception("Multiple listening");
             HttpListener = new HttpListener();
-            HttpListener.Prefixes.Add($"http://+:{ListenPort}/websock/");
+            Console.WriteLine($"http://*:{Options.Port}/{Options.Resource}");
+            HttpListener.Prefixes.Add($"http://*:{Options.Port}/{Options.Resource}");
             HttpListener.Start();
             ListeningTask = Task.Run(() => Listener());
             IsListening = true;
@@ -47,7 +49,9 @@ namespace NodeNet.NodeNet.HttpCommunication
                     if (context.Request.IsWebSocketRequest != true)
                         continue;
                     var webSocketContext = await context.AcceptWebSocketAsync(null, new TimeSpan(0, 0, 10));
-                    ConnectionOpened?.Invoke(new NodeHttpConnection(webSocketContext));
+                    var connection = new NodeHttpConnection(webSocketContext);
+                    ConnectionOpened?.Invoke(connection);
+                    connection.ListenMessages();
                 }
             } catch (InvalidOperationException exception) { 
                 IsListening = false;

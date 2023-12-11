@@ -11,21 +11,16 @@ namespace NodeNet.NodeNet.Message
     [Serializable]
     internal class MessageInfo
     {
-        public string SenderPublicKey { get; protected set; } 
-        public string ReceiverPublicKey { get; protected set; } = string.Empty; // Empty means broadcast
-        public DateTime SendingTime { get; protected set; }
-        public bool IsTechnical { get; protected set; } = false;
+        public string SenderPublicKey { get; } 
+        public string ReceiverPublicKey { get;  } = string.Empty; // Empty means broadcast
+        public DateTime SendingTime { get; set; }
+        public bool IsTechnical { get; } = false;
 
         public MessageInfo(string senderPublicKey, string receiverPublicKey)
         {
             SenderPublicKey = senderPublicKey;
             ReceiverPublicKey = receiverPublicKey;
             SendingTime = DateTime.UtcNow;
-        }
-
-        public void SetToTechnical()
-        {
-            IsTechnical = true;
         }
     }
 }

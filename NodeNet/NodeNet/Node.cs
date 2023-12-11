@@ -20,7 +20,7 @@ namespace NodeNet.NodeNet
         public INodeConnections? Connections { get; protected set; } = null;
         public ISenderSignOptions? SignOptions { get; protected set; } = null;
 
-        public static Node CreateRSAHttpNode( SenderSignOptions options )
+        public static Node CreateRSAHttpNode( SenderSignOptions options, HttpListenerOptions listenerOptions )
         {
 
             IMessageSigner messageSigner = new RSASigner.MessageSigner();
@@ -32,7 +32,9 @@ namespace NodeNet.NodeNet
             node.MessageValidator = messageValidator;
             node.MessageSigner = messageSigner;
             node.Connections = new HttpConnections();
-            node.ConnectionsListener = new NodeHttpListener();
+            var listener = new NodeHttpListener();
+            listener.Options = listenerOptions;
+            node.ConnectionsListener = listener;
             node.ConnectionsListener.ConnectionOpened += node.NewConnectionHandler;
             node.ConnectionsListener.StartListening();
 
@@ -54,12 +56,16 @@ namespace NodeNet.NodeNet
                 connection.SendMessage(message);
         }
 
-        public void Connect(string url)
+        public bool Connect(string url)
         {
             NodeHttpConnection connection = new NodeHttpConnection();
-            bool result = connection.Connect("ws://localhost:8081/websock");
+            bool result = connection.Connect(url);
             if (result == true)
                 NewConnectionHandler(connection);
+            // TODO: Verify connection enstabilished on NodeNet level
+            // Temporary solution, waiting some time, until server make actions
+            Thread.Sleep(500); 
+            return result;
         }
 
         protected void NewConnectionHandler(INodeConnection nodeConnection)
@@ -72,7 +78,13 @@ namespace NodeNet.NodeNet
         protected void NewMessageHandler(INodeReceiver nodeConnection)
         {
             // TODO: Analyze package sign, receiver addr, TTL, package cache
-            Console.WriteLine(nodeConnection.GetLastMessage().ToString());
+            var message = nodeConnection.GetLastMessage();
+            if (message == null)
+                return;
+            MessageValidator.SetValidateOptions(new ReceiverSignOptions(message));
+            var verifyResult = MessageValidator.Validate(message);
+
+            Console.WriteLine(verifyResult);
         }
     }
 }

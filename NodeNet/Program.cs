@@ -2,21 +2,14 @@
 using NodeNet.NodeNet.HttpCommunication;
 using NodeNet.NodeNet.RSASigner;
 
-var options = RSAEncryption.CreateSignOptions();
-var node = Node.CreateRSAHttpNode(options);
-Task.Delay(5000).Wait();
+var options1 = RSAEncryption.CreateSignOptions();
+var node1 = Node.CreateRSAHttpNode(options1, new HttpListenerOptions(8082, "websock/"));
+var options2 = RSAEncryption.CreateSignOptions();
+var node2 = Node.CreateRSAHttpNode(options2, new HttpListenerOptions(8083, "websock/"));
 
-NodeHttpConnection connection = new NodeHttpConnection();
-bool result = connection.Connect("ws://localhost:8080/websock");
-Console.WriteLine("Is connected? Result: {0}", result.ToString());
-connection.ListenMessages();
-Task.Delay(5000).Wait();
+bool connectSuccesful = node1.Connect("ws://localhost:8083/websock/");
+Console.WriteLine("Is node1 connected to node2? " + connectSuccesful.ToString());
+node1.SendMessage("Hello bitch!");
 
-connection.MessageReceived += (connection) =>
-{
-    var message = connection.GetLastMessage();
-    connection.CloseConnection();
-};
 
-node.SendMessage("Hello, world!");
 while (true) ;

@@ -11,12 +11,12 @@ namespace NodeNet.NodeNet.Message
     [Serializable]
     internal class MessageInfo
     {
-        public string SenderPublicKey { get; } 
-        public string ReceiverPublicKey { get;  } = string.Empty; // Empty means broadcast
-        public DateTime SendingTime { get; set; }
-        public bool IsTechnical { get; } = false;
+        public string SenderPublicKey { get; set; } 
+        public string ReceiverPublicKey { get; set; } = string.Empty; // Empty means broadcast
+        public DateTime SendingTime { get; set; } = DateTime.UtcNow;
+        public bool IsTechnical { get; set; } = false;
 
-        public MessageInfo(string senderPublicKey, string receiverPublicKey)
+        public MessageInfo(string senderPublicKey, string receiverPublicKey )
         {
             SenderPublicKey = senderPublicKey;
             ReceiverPublicKey = receiverPublicKey;

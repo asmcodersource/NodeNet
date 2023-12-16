@@ -53,7 +53,7 @@ namespace NodeNet.NodeNet.HttpCommunication
                     ConnectionOpened?.Invoke(connection);
                     connection.ListenMessages();
                 }
-            } catch (InvalidOperationException exception) { 
+            } catch (HttpListenerException exception) { 
                 IsListening = false;
             }
         }

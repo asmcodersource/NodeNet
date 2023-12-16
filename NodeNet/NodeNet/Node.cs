@@ -2,6 +2,7 @@
 using NodeNet.NodeNet.Communication;
 using NodeNet.NodeNet.HttpCommunication;
 using NodeNet.NodeNet.Message;
+using NodeNet.NodeNet.ReceiveMiddleware;
 using NodeNet.NodeNet.RSASigner;
 using NodeNet.NodeNet.SignOptions;
 using System;
@@ -19,6 +20,9 @@ namespace NodeNet.NodeNet
         public INodeListener? ConnectionsListener { get; protected set; } = null;
         public INodeConnections? Connections { get; protected set; } = null;
         public ISenderSignOptions? SignOptions { get; protected set; } = null;
+        public IReceiveMiddleware ReceiveMiddlewareHead { get; protected set; }
+
+        public event Action<MessageContext> MessageReceived;
 
         public static Node CreateRSAHttpNode( SenderSignOptions options, HttpListenerOptions listenerOptions )
         {
@@ -32,6 +36,11 @@ namespace NodeNet.NodeNet
             node.MessageValidator = messageValidator;
             node.MessageSigner = messageSigner;
             node.Connections = new HttpConnections();
+
+            // Middleware pipeline
+            node.ReceiveMiddlewareHead = new SignVerificationMiddleware(node, messageValidator);
+            // TODO: add another middlewares in pipeline
+
             var listener = new NodeHttpListener();
             listener.Options = listenerOptions;
             node.ConnectionsListener = listener;
@@ -68,6 +77,16 @@ namespace NodeNet.NodeNet
             return result;
         }
 
+        public void Close()
+        {
+            if (ConnectionsListener == null || Connections == null)
+                throw new Exception("Node is not initialized!");
+
+            ConnectionsListener.StopListening();
+            foreach (var connection in Connections.Connections())
+                connection.CloseConnection();
+        }
+
         protected void NewConnectionHandler(INodeConnection nodeConnection)
         {
             nodeConnection.WebSocketClosed += Connections.RemoveConnection;
@@ -75,16 +94,16 @@ namespace NodeNet.NodeNet
             this.Connections.AddConnection(nodeConnection);
         }
 
-        protected void NewMessageHandler(INodeReceiver nodeConnection)
+        protected void NewMessageHandler(INodeConnection nodeConnection)
         {
             // TODO: Analyze package sign, receiver addr, TTL, package cache
             var message = nodeConnection.GetLastMessage();
             if (message == null)
                 return;
-            MessageValidator.SetValidateOptions(new ReceiverSignOptions(message));
-            var verifyResult = MessageValidator.Validate(message);
-
-            Console.WriteLine(verifyResult);
+            var msgContext = new MessageContext(message, nodeConnection);
+            var msgPassMiddleware = ReceiveMiddlewareHead.Invoke(msgContext);
+            if (msgPassMiddleware)
+                MessageReceived?.Invoke(msgContext);
         }
     }
 }

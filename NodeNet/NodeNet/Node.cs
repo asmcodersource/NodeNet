@@ -38,7 +38,11 @@ namespace NodeNet.NodeNet
             node.Connections = new HttpConnections();
 
             // Middleware pipeline
-            node.ReceiveMiddlewareHead = new SignVerificationMiddleware(node, messageValidator);
+            var signMiddleware = new SignVerificationMiddleware(node, messageValidator);
+            var cacheMiddleware = new MessageCacheMiddleware();
+            signMiddleware.SetNext(cacheMiddleware);
+
+            node.ReceiveMiddlewareHead = signMiddleware;
             // TODO: add another middlewares in pipeline
 
             var listener = new NodeHttpListener();

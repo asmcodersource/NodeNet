@@ -12,7 +12,6 @@ namespace NodeNet.NodeNet.ReceiveMiddleware
     // Last middleware returns true if message have to be accepted
     internal interface IReceiveMiddleware
     {
-        public void SetNode(Node node);
         public bool Invoke(MessageContext messageContext);
         public void SetNext(IReceiveMiddleware next);
     }

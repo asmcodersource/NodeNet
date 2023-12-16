@@ -12,14 +12,12 @@ namespace NodeNet.NodeNet.ReceiveMiddleware
     // If message sing isn't correct than next middlewares will not be called
     internal class SignVerificationMiddleware : IReceiveMiddleware
     {
-        public Node Node { get; protected set; }
         public IReceiveMiddleware Next { get; protected set; } = null;
         public IMessageValidator MessageValidator { get; protected set; }
 
         public SignVerificationMiddleware(Node node, IMessageValidator messageValidator)
         {
-            MessageValidator = messageValidator;
-            SetNode(node);  
+            MessageValidator = messageValidator; 
         }
 
         public bool Invoke(MessageContext messageContext)
@@ -30,11 +28,6 @@ namespace NodeNet.NodeNet.ReceiveMiddleware
                 return Next != null ? Next.Invoke(messageContext) : true;
             else
                 return false;
-        }
-
-        public void SetNode(Node node)
-        {
-            Node = node;
         }
 
         public void SetNext(IReceiveMiddleware next)

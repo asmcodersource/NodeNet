@@ -12,5 +12,10 @@ namespace NodeNet.NodeNet.Communication
         public event Action<INodeConnection> WebSocketClosed;
         public bool Connect(string addr);
         public void CloseConnection();
+        public void ListenMessages();
+
+        public Task<byte[]> ReceiveRawData(CancellationToken cancellationToken);
+        public Task SendRawData(byte[] data, CancellationToken cancellationToken);
+
     }
 }

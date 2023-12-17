@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using NodeNet.NodeNet.Communication;
+using NodeNet.NodeNet.NodeActions;
 
 namespace NodeNet.NodeNet.HttpCommunication
 {
@@ -50,8 +51,11 @@ namespace NodeNet.NodeNet.HttpCommunication
                         continue;
                     var webSocketContext = await context.AcceptWebSocketAsync(null, new TimeSpan(0, 0, 10));
                     var connection = new NodeHttpConnection(webSocketContext);
-                    ConnectionOpened?.Invoke(connection);
-                    connection.ListenMessages();
+
+                    var pongTask = PingPong.Pong(connection);
+                    pongTask.Wait();
+                    if (pongTask.Result)
+                        ConnectionOpened?.Invoke(connection);
                 }
             } catch (HttpListenerException exception) { 
                 IsListening = false;

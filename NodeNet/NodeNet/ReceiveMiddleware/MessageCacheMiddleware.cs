@@ -31,7 +31,6 @@ namespace NodeNet.NodeNet.ReceiveMiddleware
                     var hash = sha512.ComputeHash(memoryStream.ToArray());
                     if (HashContained(hash))
                         return false;
-
                     StoreHash(hash);
                     if( Next != null )
                         return Next.Invoke(messageContext);
@@ -43,7 +42,8 @@ namespace NodeNet.NodeNet.ReceiveMiddleware
 
         protected void StoreHash(byte[] hash)
         {
-            cackedMessages.Add(hash);
+            lock (this)
+                cackedMessages.Add(hash);
         }
 
         protected bool HashContained(byte[] hash)

@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using NodeNet.NodeNet.Communication;
 
@@ -63,6 +64,20 @@ namespace NodeNet.NodeNet.HttpCommunication
             var jsonMessage = JsonSerializer.Serialize(message);
             var segment = new ArraySegment<byte>(Encoding.UTF8.GetBytes(jsonMessage));
             WebSocket.SendAsync(segment, WebSocketMessageType.Binary, true, CancellationToken.None).Wait();
+        }
+
+        public async Task SendRawData(byte[] data, CancellationToken cancellationToken)
+        {
+            await WebSocket.SendAsync(data, WebSocketMessageType.Binary, true, cancellationToken);
+        }
+
+        public async Task<byte[]> ReceiveRawData(CancellationToken cancellationToken)
+        {
+            ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[4096]);
+            var result = await WebSocket.ReceiveAsync(buffer, cancellationToken);
+            if (result.CloseStatus == WebSocketCloseStatus.Empty)
+                throw new WebSocketException("Socket closed");
+            return buffer.Array.Take(result.Count).ToArray();
         }
 
         public void CloseConnection()

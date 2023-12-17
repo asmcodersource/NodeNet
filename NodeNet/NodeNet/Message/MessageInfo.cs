@@ -16,11 +16,12 @@ namespace NodeNet.NodeNet.Message
         public DateTime SendingTime { get; set; } = DateTime.UtcNow;
         public bool IsTechnical { get; set; } = false;
 
-        public MessageInfo(string senderPublicKey, string receiverPublicKey )
+        public MessageInfo(string senderPublicKey, string receiverPublicKey, bool isTechnical = false )
         {
             SenderPublicKey = senderPublicKey;
             ReceiverPublicKey = receiverPublicKey;
             SendingTime = DateTime.UtcNow;
+            IsTechnical = isTechnical;
         }
     }
 }

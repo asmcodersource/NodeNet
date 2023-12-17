@@ -2,6 +2,7 @@
 using NodeNet.NodeNet.Communication;
 using NodeNet.NodeNet.HttpCommunication;
 using NodeNet.NodeNet.Message;
+using NodeNet.NodeNet.NodeActions;
 using NodeNet.NodeNet.ReceiveMiddleware;
 using NodeNet.NodeNet.RSASigner;
 using NodeNet.NodeNet.SignOptions;
@@ -73,12 +74,16 @@ namespace NodeNet.NodeNet
         {
             NodeHttpConnection connection = new NodeHttpConnection();
             bool result = connection.Connect(url);
-            if (result == true)
+            if (result == false)
+                return false;
+            var pingTask = PingPong.Ping(connection);
+            pingTask.Wait();
+            if (pingTask.Result)
+            {
                 NewConnectionHandler(connection);
-            // TODO: Verify connection enstabilished on NodeNet level
-            // Temporary solution, waiting some time, until server make actions
-            Thread.Sleep(500); 
-            return result;
+                return true;
+            }
+            return false;
         }
 
         public void Close()
@@ -96,11 +101,11 @@ namespace NodeNet.NodeNet
             nodeConnection.WebSocketClosed += Connections.RemoveConnection;
             nodeConnection.MessageReceived += NewMessageHandler;
             this.Connections.AddConnection(nodeConnection);
+            nodeConnection.ListenMessages();
         }
 
         protected void NewMessageHandler(INodeConnection nodeConnection)
         {
-            // TODO: Analyze package sign, receiver addr, TTL, package cache
             var message = nodeConnection.GetLastMessage();
             if (message == null)
                 return;

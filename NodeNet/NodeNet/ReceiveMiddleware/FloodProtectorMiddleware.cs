@@ -15,23 +15,25 @@ namespace NodeNet.NodeNet.ReceiveMiddleware
         protected Dictionary<INodeConnection, ulong> dataPerConnection = new Dictionary<INodeConnection, ulong>();
         protected Queue<ReceivedDataInfo> receiveDataQueue = new Queue<ReceivedDataInfo>();
         public IReceiveMiddleware Next { get; protected set; } = null;
-        public ulong MaxScorePerConnection { get; set; } = 100_000;
+        public ulong MaxScorePerConnection { get; set; } = 500_000;
 
         public bool Invoke(MessageContext messageContext)
         {
-            var dataInfo = new ReceivedDataInfo(messageContext);
-            receiveDataQueue.Enqueue(dataInfo);
-            if (dataPerConnection.ContainsKey(messageContext.SenderConnection))
-                dataPerConnection[messageContext.SenderConnection] += dataInfo.ReceivedDataScore;
-            else
-                dataPerConnection.Add(messageContext.SenderConnection, dataInfo.ReceivedDataScore);
-            RemoveOutOfWindow();
-            if (dataPerConnection[messageContext.SenderConnection] > MaxScorePerConnection)
-                return false;
-            else if (Next != null)
-                return Next.Invoke(messageContext);
-            else
-                return true;
+            lock (this) { 
+                var dataInfo = new ReceivedDataInfo(messageContext);
+                receiveDataQueue.Enqueue(dataInfo);
+                if (dataPerConnection.ContainsKey(messageContext.SenderConnection))
+                    dataPerConnection[messageContext.SenderConnection] += dataInfo.ReceivedDataScore;
+                else
+                    dataPerConnection.Add(messageContext.SenderConnection, dataInfo.ReceivedDataScore);
+                RemoveOutOfWindow();
+                if (dataPerConnection[messageContext.SenderConnection] > MaxScorePerConnection)
+                    return false;
+                else if (Next != null)
+                    return Next.Invoke(messageContext);
+                else
+                    return true;
+            }
         }
 
         public void RemoveOutOfWindow()
@@ -60,7 +62,7 @@ namespace NodeNet.NodeNet.ReceiveMiddleware
 
 
         public ReceivedDataInfo(MessageContext messageContext) {
-            ulong inputMessageSizeScore = 10;
+            ulong inputMessageSizeScore = 50;
             double inputMessageDateScaleScore = 1.0;
             ReceivedDataScore = inputMessageSizeScore + (ulong)(inputMessageDateScaleScore * messageContext.Message.Data.Length);
             Connection = messageContext.SenderConnection;

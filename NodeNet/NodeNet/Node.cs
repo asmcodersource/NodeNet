@@ -42,8 +42,8 @@ namespace NodeNet.NodeNet
             var signMiddleware = new SignVerificationMiddleware(node, messageValidator);
             var cacheMiddleware = new MessageCacheMiddleware();
             var floodProtectorMiddleware = new FloodProtectorMiddleware();
-            signMiddleware.SetNext(cacheMiddleware);
-            cacheMiddleware.SetNext(floodProtectorMiddleware);
+            signMiddleware.SetNext(floodProtectorMiddleware);
+            floodProtectorMiddleware.SetNext(cacheMiddleware);
             node.ReceiveMiddlewareHead = signMiddleware;
             // TODO: add another middlewares in pipeline
 

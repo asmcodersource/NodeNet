@@ -1,5 +1,6 @@
 ﻿using NodeNet.NodeNet;
 using NodeNet.NodeNet.HttpCommunication;
+using NodeNet.NodeNet.ReceiveMiddleware;
 using NodeNet.NodeNet.RSASigner;
 
 var options1 = RSAEncryption.CreateSignOptions();
@@ -10,6 +11,7 @@ node1.MessageReceived += (msgContext) => { Console.WriteLine(msgContext.Message.
 node2.MessageReceived += (msgContext) => { Console.WriteLine(msgContext.Message.Data); };
 node1.Connect("ws://localhost:8083/websock/");
 
+
 new Thread(() => {
     while (true)
     {
@@ -17,6 +19,7 @@ new Thread(() => {
         node1.SendMessage("Message2");
     }
 }).Start();
+
 
 
 while (true);

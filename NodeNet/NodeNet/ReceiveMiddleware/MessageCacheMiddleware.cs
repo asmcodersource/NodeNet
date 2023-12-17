@@ -17,7 +17,8 @@ namespace NodeNet.NodeNet.ReceiveMiddleware
     internal class MessageCacheMiddleware : IReceiveMiddleware
     {
         public IReceiveMiddleware Next { get; protected set; } = null;
-        protected List<byte[]> cackedMessages = new List<byte[]>();
+        protected HashTree hashTree = new HashTree();
+        protected int hashCountCounter = 0;
 
         public bool Invoke(MessageContext messageContext)
         {
@@ -29,29 +30,21 @@ namespace NodeNet.NodeNet.ReceiveMiddleware
                     formatter.Serialize(memoryStream, messageContext.Message.Info);
                     formatter.Serialize(memoryStream, messageContext.Message.Data);
                     var hash = sha512.ComputeHash(memoryStream.ToArray());
-                    if (HashContained(hash))
+                    if (hashTree.Contains(hash))
                         return false;
-                    StoreHash(hash);
-                    if( Next != null )
+                    hashTree.Add(hash);
+                    hashCountCounter++;
+                    if( hashCountCounter > 10000)
+                    {
+                        hashCountCounter = 0;
+                        hashTree.Clear();
+                    }
+                    if ( Next != null )
                         return Next.Invoke(messageContext);
                     else
                         return true;
                 }
             }
-        }
-
-        protected void StoreHash(byte[] hash)
-        {
-            lock (this)
-                cackedMessages.Add(hash);
-        }
-
-        protected bool HashContained(byte[] hash)
-        {
-            foreach(var item in cackedMessages)
-                if( item.SequenceEqual(hash)) 
-                    return true;
-            return false;
         }
 
         public void SetNext(IReceiveMiddleware next)

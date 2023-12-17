@@ -52,10 +52,10 @@ namespace NodeNet.NodeNet.HttpCommunication
                     var webSocketContext = await context.AcceptWebSocketAsync(null, new TimeSpan(0, 0, 10));
                     var connection = new NodeHttpConnection(webSocketContext);
 
-                    var pongTask = PingPong.Pong(connection);
-                    pongTask.Wait();
-                    if (pongTask.Result)
-                        ConnectionOpened?.Invoke(connection);
+                    PingPong.Pong(connection).ContinueWith((result) => {
+                        if (result.Result)
+                            ConnectionOpened?.Invoke(connection);
+                    });
                 }
             } catch (HttpListenerException exception) { 
                 IsListening = false;

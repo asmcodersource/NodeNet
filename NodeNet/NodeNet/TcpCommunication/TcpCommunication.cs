@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NodeNet.NodeNet.HttpCommunication
+namespace NodeNet.NodeNet.TcpCommunication
 {
-    internal class HttpConnections : INodeConnections
+    internal class TcpCommunication : INodeConnections
     {
         List<INodeConnection> nodeHttpConnections = new List<INodeConnection>();
 

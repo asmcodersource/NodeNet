@@ -2,20 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using NodeNet.NodeNet.Communication;
 using NodeNet.NodeNet.NodeActions;
 
-namespace NodeNet.NodeNet.HttpCommunication
+namespace NodeNet.NodeNet.TcpCommunication
 {
-    internal class NodeHttpListener : INodeListener
+    internal class NodeTcpListener : INodeListener
     {
         public bool IsListening { get; set; } = false;
         public int ListenPort { get; set; } = 8080;
         protected Task? ListeningTask { get; set; } = null;
-        public HttpListener HttpListener { get; protected set; }
-        public HttpListenerOptions Options { get; set; } = new HttpListenerOptions(8080, "websock/");
+        public TcpListener TcpListener { get; protected set; }
+        public TcpListenerOptions Options { get; set; } = new TcpListenerOptions(8080);
 
         public event Action<INodeConnection> ConnectionOpened;
 
@@ -23,10 +24,8 @@ namespace NodeNet.NodeNet.HttpCommunication
         {
             if (IsListening == true)
                 throw new Exception("Multiple listening");
-            HttpListener = new HttpListener();
-            Console.WriteLine($"http://*:{Options.Port}/{Options.Resource}");
-            HttpListener.Prefixes.Add($"http://*:{Options.Port}/{Options.Resource}");
-            HttpListener.Start();
+            TcpListener = new TcpListener(Options.Port);
+            TcpListener.Start();
             ListeningTask = Task.Run(() => Listener());
             IsListening = true;
         }
@@ -36,7 +35,7 @@ namespace NodeNet.NodeNet.HttpCommunication
             if (ListeningTask == null)
                 throw new Exception("Is not listening");
             IsListening = false;
-            HttpListener.Stop();
+            TcpListener.Stop();
             ListeningTask.Wait();
         }
 
@@ -46,11 +45,8 @@ namespace NodeNet.NodeNet.HttpCommunication
             {
                 while (IsListening == true)
                 {
-                    var context = await HttpListener.GetContextAsync();
-                    if (context.Request.IsWebSocketRequest != true)
-                        continue;
-                    var webSocketContext = await context.AcceptWebSocketAsync(null, new TimeSpan(0, 0, 10));
-                    var connection = new NodeHttpConnection(webSocketContext);
+                    var tcpConnection = await TcpListener.AcceptTcpClientAsync();
+                    var connection = new NodeTcpConnection(tcpConnection);
 
                     PingPong.Pong(connection).ContinueWith((result) => {
                         if (result.Result)
@@ -60,6 +56,11 @@ namespace NodeNet.NodeNet.HttpCommunication
             } catch (HttpListenerException exception) { 
                 IsListening = false;
             }
+        }
+
+        string INodeListener.GetConnectionAddress()
+        {
+            throw new NotImplementedException();
         }
     }
 }

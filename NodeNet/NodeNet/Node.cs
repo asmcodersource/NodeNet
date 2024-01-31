@@ -1,6 +1,6 @@
 ﻿
 using NodeNet.NodeNet.Communication;
-using NodeNet.NodeNet.HttpCommunication;
+using NodeNet.NodeNet.TcpCommunication;
 using NodeNet.NodeNet.Message;
 using NodeNet.NodeNet.NodeActions;
 using NodeNet.NodeNet.ReceiveMiddleware;
@@ -22,10 +22,11 @@ namespace NodeNet.NodeNet
         public INodeConnections? Connections { get; protected set; } = null;
         public ISenderSignOptions? SignOptions { get; protected set; } = null;
         public IReceiveMiddleware ReceiveMiddlewareHead { get; protected set; }
+        public NetworkExplorer.NetworkExplorer Explorer { get; protected set; }
 
         public event Action<MessageContext> MessageReceived;
 
-        public static Node CreateRSAHttpNode( SenderSignOptions options, HttpListenerOptions listenerOptions )
+        public static Node CreateRSAHttpNode( SenderSignOptions options, TcpListenerOptions listenerOptions )
         {
 
             IMessageSigner messageSigner = new RSASigner.MessageSigner();
@@ -36,7 +37,8 @@ namespace NodeNet.NodeNet
             node.SignOptions = options;
             node.MessageValidator = messageValidator;
             node.MessageSigner = messageSigner;
-            node.Connections = new HttpConnections();
+            node.Connections = new TcpCommunication.TcpCommunication();
+            node.Explorer = new NetworkExplorer.NetworkExplorer(node);
 
             // Middleware pipeline
             var signMiddleware = new SignVerificationMiddleware(node, messageValidator);
@@ -44,10 +46,11 @@ namespace NodeNet.NodeNet
             var floodProtectorMiddleware = new FloodProtectorMiddleware();
             signMiddleware.SetNext(floodProtectorMiddleware);
             floodProtectorMiddleware.SetNext(cacheMiddleware);
+            cacheMiddleware.SetNext(node.Explorer.Middleware);
             node.ReceiveMiddlewareHead = signMiddleware;
             // TODO: add another middlewares in pipeline
 
-            var listener = new NodeHttpListener();
+            var listener = new NodeTcpListener();
             listener.Options = listenerOptions;
             node.ConnectionsListener = listener;
             node.ConnectionsListener.ConnectionOpened += node.NewConnectionHandler;
@@ -73,7 +76,7 @@ namespace NodeNet.NodeNet
 
         public bool Connect(string url)
         {
-            NodeHttpConnection connection = new NodeHttpConnection();
+            NodeTcpConnection connection = new NodeTcpConnection();
             bool result = connection.Connect(url);
             if (result == false)
                 return false;

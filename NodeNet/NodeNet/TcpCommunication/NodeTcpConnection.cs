@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
@@ -9,36 +10,38 @@ using System.Threading;
 using System.Threading.Tasks;
 using NodeNet.NodeNet.Communication;
 
-namespace NodeNet.NodeNet.HttpCommunication
+namespace NodeNet.NodeNet.TcpCommunication
 {
-    internal class NodeHttpConnection : INodeConnection
+    internal class NodeTcpConnection : INodeConnection
     {
         public bool IsListening { get; set; } = false;
         protected Task? ListeningTask { get; set; } = null;
-        public WebSocket WebSocket { get; protected set; }
+        public TcpClient TcpClient { get; protected set; }
         protected Queue<Message.Message> MessagesQueue = new Queue<Message.Message>();
         public event Action<INodeConnection> MessageReceived;
         public event Action<INodeConnection> WebSocketClosed;
 
 
-        public NodeHttpConnection()
+        public NodeTcpConnection()
         {
-            WebSocket = null;
+            TcpClient = new TcpClient();
         }
 
-        public NodeHttpConnection(HttpListenerWebSocketContext context)
+        public NodeTcpConnection(TcpClient tcpClient)
         {
-            WebSocket = context.WebSocket;
+            TcpClient = tcpClient;
         }
         
         public bool Connect( string addr )
         {
-            ClientWebSocket clientWebSocket = new ClientWebSocket();
-            clientWebSocket.ConnectAsync(new Uri(addr), CancellationToken.None).Wait();
-            if (clientWebSocket.State != WebSocketState.Open)
-                return false;
-            WebSocket = clientWebSocket as WebSocket;
-            return true;
+            string ip = addr.Split(":")[0];
+            string port = addr.Split(":")[1];
+            try
+            {
+                TcpClient.Connect(ip, Convert.ToInt32(port));
+                return true;
+            } catch (Exception ex) { }
+            return false;
         }
 
         public Message.Message? GetLastMessage()
@@ -63,26 +66,32 @@ namespace NodeNet.NodeNet.HttpCommunication
         {
             var jsonMessage = JsonSerializer.Serialize(message);
             var segment = new ArraySegment<byte>(Encoding.UTF8.GetBytes(jsonMessage));
-            WebSocket.SendAsync(segment, WebSocketMessageType.Binary, true, CancellationToken.None).Wait();
+            var stream = TcpClient.GetStream();
+            stream.Write(segment);
         }
 
         public async Task SendRawData(byte[] data, CancellationToken cancellationToken)
         {
-            await WebSocket.SendAsync(data, WebSocketMessageType.Binary, true, cancellationToken);
+            await TcpClient.GetStream().WriteAsync(data, cancellationToken);
         }
 
         public async Task<byte[]> ReceiveRawData(CancellationToken cancellationToken)
         {
             ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[4096]);
-            var result = await WebSocket.ReceiveAsync(buffer, cancellationToken);
-            if (result.CloseStatus == WebSocketCloseStatus.Empty)
+            try
+            {
+                var size = await TcpClient.GetStream().ReadAsync(buffer, cancellationToken);
+                return buffer.Array.Take(size).ToArray();
+            }
+            catch (Exception ex)
+            {
                 throw new WebSocketException("Socket closed");
-            return buffer.Array.Take(result.Count).ToArray();
+            }
         }
 
         public void CloseConnection()
         {
-            if (WebSocket == null)
+            if (TcpClient == null)
                 throw new Exception("Socket is not connected");
             if (IsListening)
                 WebSocketClosed?.Invoke(this);
@@ -91,19 +100,16 @@ namespace NodeNet.NodeNet.HttpCommunication
         }
 
         protected async Task MessageListener() {
+            // TODO: verify disconnect execution
             var buffer = new ArraySegment<byte>(new byte[1024*16]);
             try
             {
                 while (IsListening)
                 {
-                    var result = await WebSocket.ReceiveAsync(buffer, CancellationToken.None);
-                    if (result.CloseStatus == WebSocketCloseStatus.Empty)
-                        break;
-                    if (result.EndOfMessage != true)
-                        continue;
+                    var size = await TcpClient.GetStream().ReadAsync(buffer, CancellationToken.None);
                     try
                     {
-                        var jsonString = Encoding.UTF8.GetString(buffer.Take(result.Count).ToArray());
+                        var jsonString = Encoding.UTF8.GetString(buffer.Take(size).ToArray());
                         var message = JsonSerializer.Deserialize<Message.Message>(jsonString);
                         Array.Fill<byte>(buffer.Array, 0, 0, 1024 * 16);
                         AddMessageToQueue(message);
@@ -124,6 +130,11 @@ namespace NodeNet.NodeNet.HttpCommunication
         {
             MessagesQueue.Enqueue(message);
             MessageReceived?.Invoke(this);
+        }
+
+        public string GetConnectionAddress()
+        {
+            return "null";
         }
     }
 }

@@ -13,6 +13,9 @@ namespace NodeNet.NodeNet.NodeActions
         protected const string PingData = "NodeNetPingMessage";
         protected const string PongData = "NodeNetPongMessage";
 
+
+        // Send ping request to active I node connection
+        // Should be used before any other data transfers
         public async static Task<bool> Ping(INodeConnection connection)
         {
             try

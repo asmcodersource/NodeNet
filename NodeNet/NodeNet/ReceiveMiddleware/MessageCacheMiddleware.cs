@@ -17,6 +17,7 @@ namespace NodeNet.NodeNet.ReceiveMiddleware
     internal class MessageCacheMiddleware : IReceiveMiddleware
     {
         public IReceiveMiddleware Next { get; protected set; } = null;
+        public UInt32 MessageStorageSize { get; protected set; } = 10000;
         protected HashTree hashTree = new HashTree();
         protected int hashCountCounter = 0;
 
@@ -34,7 +35,7 @@ namespace NodeNet.NodeNet.ReceiveMiddleware
                         return false;
                     hashTree.Add(hash);
                     hashCountCounter++;
-                    if( hashCountCounter > 10000)
+                    if( hashCountCounter > MessageStorageSize)
                     {
                         hashCountCounter = 0;
                         hashTree.Clear();

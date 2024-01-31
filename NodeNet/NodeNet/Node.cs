@@ -102,7 +102,8 @@ namespace NodeNet.NodeNet
 
         protected void NewConnectionHandler(INodeConnection nodeConnection)
         {
-            nodeConnection.WebSocketClosed += Connections.RemoveConnection;
+           
+            nodeConnection.ConnectionClosed += Connections.RemoveConnection;
             nodeConnection.MessageReceived += NewMessageHandler;
             this.Connections.AddConnection(nodeConnection);
             nodeConnection.ListenMessages();

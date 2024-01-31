@@ -9,7 +9,7 @@ namespace NodeNet.NodeNet.Communication
     internal interface INodeConnection : INodeSender, INodeReceiver
     {
         public event Action<INodeConnection> MessageReceived;
-        public event Action<INodeConnection> WebSocketClosed;
+        public event Action<INodeConnection> ConnectionClosed;
         public bool Connect(string addr);
         public void CloseConnection();
         public void ListenMessages();

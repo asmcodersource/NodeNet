@@ -14,12 +14,13 @@ node1.Connect("127.0.0.1:8083");
 
 
 new Thread(() => {
-    while (true)
+    for( int i = 0; i < 10; i++ ) 
     {
         node2.SendMessage("Message1");
         node1.SendMessage("Message2");
-        Thread.Sleep(100);
+        Thread.Sleep(500);
     }
+    node2.Close();
 }).Start();
 
 

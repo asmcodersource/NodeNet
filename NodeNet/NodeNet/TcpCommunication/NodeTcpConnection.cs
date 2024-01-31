@@ -19,7 +19,7 @@ namespace NodeNet.NodeNet.TcpCommunication
         public TcpClient TcpClient { get; protected set; }
         protected Queue<Message.Message> MessagesQueue = new Queue<Message.Message>();
         public event Action<INodeConnection> MessageReceived;
-        public event Action<INodeConnection> WebSocketClosed;
+        public event Action<INodeConnection> ConnectionClosed;
 
 
         public NodeTcpConnection()
@@ -94,7 +94,7 @@ namespace NodeNet.NodeNet.TcpCommunication
             if (TcpClient == null)
                 throw new Exception("Socket is not connected");
             if (IsListening)
-                WebSocketClosed?.Invoke(this);
+                ConnectionClosed?.Invoke(this);
             IsListening = false;
             
         }
@@ -134,7 +134,14 @@ namespace NodeNet.NodeNet.TcpCommunication
 
         public string GetConnectionAddress()
         {
-            return "null";
+            if (TcpClient == null)
+                throw new Exception("Connections is not initialized");
+            if (TcpClient.Connected == false)
+                throw new Exception("Connection is not active");
+
+            string clientAddress = ((IPEndPoint)TcpClient.Client.RemoteEndPoint).Address.ToString();
+            int clientPort = ((IPEndPoint)TcpClient.Client.RemoteEndPoint).Port;
+            return clientAddress + ":" + clientPort;
         }
     }
 }

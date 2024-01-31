@@ -50,7 +50,7 @@ namespace NodeNet.NodeNet.NetworkExplorer
                         // Should be ok?
                         Explorer.UpdateConnectionInfo(echoRequest.MyAddress);
                         var echoRequestResponse = new EchoResponse();
-                        echoRequestResponse.MyAddress = Node.ConnectionsListener.GetConnectionAddress();
+                        echoRequestResponse.MyAddress = messageContext.SenderConnection.GetConnectionAddress();
                         Node.SendMessage(JsonConvert.SerializeObject(echoRequestResponse), messageContext.Message.Info.ReceiverPublicKey);
                         break;
                 };

@@ -8,6 +8,5 @@ namespace NodeNet.NodeNet.NetworkExplorer.Responses
 {
     internal abstract class IResponse
     {
-        public abstract String GetType();
     }
 }

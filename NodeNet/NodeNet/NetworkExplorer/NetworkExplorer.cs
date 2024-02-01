@@ -1,5 +1,8 @@
 ﻿using Newtonsoft.Json;
 using NodeNet.NodeNet.Communication;
+using NodeNet.NodeNet.Message;
+using NodeNet.NodeNet.NetworkExplorer.Requests;
+using NodeNet.NodeNet.RSASigner;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,12 +17,42 @@ namespace NodeNet.NodeNet.NetworkExplorer
     /// </summary>
     internal class NetworkExplorer
     {
-        List<RecentNodeConnection> recentNodeConnections = new List<RecentNodeConnection>();
+        public Node Node { get; protected set; }
+        public List<RecentNodeConnection> recentNodeConnections { get; protected set; } = new List<RecentNodeConnection>();
+        string filePath = string.Empty;
+
         public NetworkExplorerMiddleware Middleware { get; set; }
 
-        public NetworkExplorer(Node node)
+        public NetworkExplorer(Node node, string filePath = "explorer.dat")
         {
             Middleware = new NetworkExplorerMiddleware(node, this);
+            this.filePath = filePath;
+            this.Node = node;
+            LoadRecentConnectionsFromFile(filePath);
+        }
+
+        // TODO: change this to something legal
+        ~NetworkExplorer()
+        {
+            SaveRecentConnectionsToFile(filePath);
+        }
+
+        public void SendExploreEcho()
+        {
+            if (Node.MessageSigner == null || Node.SignOptions == null || Node.Connections == null)
+                throw new Exception("Node is not initialized!");
+
+            var connections = Node.Connections.Connections();
+            foreach (var connection in connections)
+            {
+                var echoRequest = new EchoRequest();
+                echoRequest.MyAddress = connection.GetConnectionAddress();
+                string jsonObject = JsonConvert.SerializeObject(echoRequest);
+                var messageInfo = new MessageInfo(Node.SignOptions.PublicKey, String.Empty, true);
+                var message = new Message.Message(messageInfo, jsonObject);
+                Node.MessageSigner.Sign(message);
+                connection.SendMessage(message);
+            }
         }
 
         public void UpdateConnectionInfo( INodeConnection nodeConnection )
@@ -45,7 +78,10 @@ namespace NodeNet.NodeNet.NetworkExplorer
         protected int FindByAddress(string address)
         {
             // TODO: invent something fast for this \ Maybe another dictionary with iterator coordinates
-            int index = recentNodeConnections.IndexOf(recentNodeConnections.Where(x => x.Address == address).First());
+            var recentConnections = recentNodeConnections.Where(x => x.Address == address);
+            if (recentConnections.Count() == 0)
+                return -1;
+            int index = recentNodeConnections.IndexOf(recentConnections.First());
             return index;
         }
 
@@ -53,6 +89,8 @@ namespace NodeNet.NodeNet.NetworkExplorer
         {
             try
             {
+                if (File.Exists(path) == false)
+                    return;
                 var stream = File.OpenRead(path);
                 var file = new System.IO.StreamReader(stream);
                 var savedNodeConnections = JsonConvert.DeserializeObject<List<RecentNodeConnection>>(file.ReadToEnd());

@@ -9,6 +9,6 @@ namespace NodeNet.NodeNet.NetworkExplorer.Requests
     internal class EchoRequest : IRequest
     {
         public string MyAddress { get; set; }
-        public override String GetType() => "EchoRequest";
+        public string MessageType { get { return typeof(EchoRequest).FullName; } }
     }
 }

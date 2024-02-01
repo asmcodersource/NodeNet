@@ -11,7 +11,7 @@ using NodeNet.NodeNet.NodeActions;
 
 namespace NodeNet.NodeNet.TcpCommunication
 {
-    internal class NodeTcpListener : INodeListener
+    internal class NodeTcpListener : INodeListener, ITcpAddressProvider
     {
         public bool IsListening { get; set; } = false;
         public int ListenPort { get; set; } = 8080;
@@ -26,6 +26,7 @@ namespace NodeNet.NodeNet.TcpCommunication
         {
             if (IsListening == true)
                 throw new Exception("Multiple listening");
+            ListenPort = Options.Port;
             TcpListener = new TcpListener(Options.Port);
             TcpListener.Start();
             cancellationTokenSource = new CancellationTokenSource();
@@ -51,6 +52,7 @@ namespace NodeNet.NodeNet.TcpCommunication
                 {
                     var tcpConnection = await TcpListener.AcceptTcpClientAsync(cancellationTokenSource.Token);
                     var connection = new NodeTcpConnection(tcpConnection);
+                    connection.TcpAddressProvider = this;
 
                     PingPong.Pong(connection).ContinueWith((result) => {
                         if (result.Result)
@@ -63,6 +65,16 @@ namespace NodeNet.NodeNet.TcpCommunication
         }
 
         string INodeListener.GetConnectionAddress()
+        {
+            throw new NotImplementedException();
+        }
+
+        public int GetNodeTcpPort()
+        {
+            return ListenPort;
+        }
+
+        public string GetNodeTcpIP()
         {
             throw new NotImplementedException();
         }

@@ -17,6 +17,8 @@ namespace NodeNet.NodeNet.TcpCommunication
         public bool IsListening { get; set; } = false;
         protected Task? ListeningTask { get; set; } = null;
         public TcpClient TcpClient { get; protected set; }
+        public ITcpAddressProvider TcpAddressProvider { get; set; }
+
         protected Queue<Message.Message> MessagesQueue = new Queue<Message.Message>();
         public event Action<INodeConnection> MessageReceived;
         public event Action<INodeConnection> ConnectionClosed;
@@ -139,8 +141,8 @@ namespace NodeNet.NodeNet.TcpCommunication
             if (TcpClient.Connected == false)
                 throw new Exception("Connection is not active");
 
-            string clientAddress = ((IPEndPoint)TcpClient.Client.RemoteEndPoint).Address.ToString();
-            int clientPort = ((IPEndPoint)TcpClient.Client.RemoteEndPoint).Port;
+            string clientAddress = ((IPEndPoint)TcpClient.Client.LocalEndPoint).Address.MapToIPv4().ToString();
+            int clientPort = TcpAddressProvider.GetNodeTcpPort();
             return clientAddress + ":" + clientPort;
         }
     }

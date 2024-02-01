@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NodeNet.NodeNet.NetworkExplorer.Requests;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,6 +10,6 @@ namespace NodeNet.NodeNet.NetworkExplorer.Responses
     internal class EchoResponse : IResponse
     {
         public string MyAddress { get; set; }
-        public override String GetType() => "EchoResponse";
+        public string MessageType { get { return typeof(EchoResponse).FullName; } }
     }
 }

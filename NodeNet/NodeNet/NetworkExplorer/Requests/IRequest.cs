@@ -8,6 +8,5 @@ namespace NodeNet.NodeNet.NetworkExplorer.Requests
 {
     internal abstract class IRequest
     {
-       public abstract String GetType();
     }
 }

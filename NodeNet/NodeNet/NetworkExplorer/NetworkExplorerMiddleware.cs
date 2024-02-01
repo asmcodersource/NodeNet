@@ -41,8 +41,12 @@ namespace NodeNet.NodeNet.NetworkExplorer
         public void AcceptExporerMessages(MessageContext messageContext)
         {
             string requestJson = messageContext.Message.Data.ToString();
-            var message = JsonConvert.DeserializeObject(requestJson);
-            if( message is IRequest request)
+            var rawMessage = JsonConvert.DeserializeObject<dynamic>(requestJson);
+            var receivedType = (string)rawMessage.MessageType;
+            var messageType = Type.GetType(receivedType);
+            var message = JsonConvert.DeserializeObject(requestJson, messageType);
+
+            if ( message is IRequest request)
             {
                 switch(request)
                 {
@@ -51,7 +55,7 @@ namespace NodeNet.NodeNet.NetworkExplorer
                         Explorer.UpdateConnectionInfo(echoRequest.MyAddress);
                         var echoRequestResponse = new EchoResponse();
                         echoRequestResponse.MyAddress = messageContext.SenderConnection.GetConnectionAddress();
-                        Node.SendMessage(JsonConvert.SerializeObject(echoRequestResponse), messageContext.Message.Info.ReceiverPublicKey);
+                        Node.SendMessage(JsonConvert.SerializeObject(echoRequestResponse), messageContext.Message.Info.ReceiverPublicKey, true);
                         break;
                 };
             }

@@ -12,6 +12,8 @@ node1.MessageReceived += (msgContext) => { Console.WriteLine(msgContext.Message.
 node2.MessageReceived += (msgContext) => { Console.WriteLine(msgContext.Message.Data); };
 node1.Connect("127.0.0.1:8083");
 
+node1.NetworkExplorer.SendExploreEcho();
+//node2.NetworkExplorer.SendExploreEcho();
 
 new Thread(() => {
     for( int i = 0; i < 10; i++ ) 

@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace NodeNet.NodeNet.ReceiveMiddleware
+﻿namespace NodeNet.NodeNet.ReceiveMiddleware
 {
-    internal class HashTree
+    public class HashTree
     {
         Dictionary<byte, HashTree> tree = new Dictionary<byte, HashTree>();
 
@@ -25,7 +19,7 @@ namespace NodeNet.NodeNet.ReceiveMiddleware
 
         public bool Contains(byte[] hash, int offset = 0)
         {
-            if (offset >= hash.Length) 
+            if (offset >= hash.Length)
                 return true;
             if (!tree.ContainsKey(hash[offset]))
                 return false;

@@ -1,11 +1,10 @@
-﻿using NodeNet.NodeNet.Message;
-using System.Runtime.Serialization.Formatters.Binary;
+﻿using NodeNet.NodeNet.RSAEncryptions;
 using System.Runtime.Serialization;
-using NodeNet.NodeNet.RSAEncryptions;
+using System.Runtime.Serialization.Formatters.Binary;
 
-namespace NodeNet.NodeNet.RSASigner
+namespace NodeNet.NodeNet.Message
 {
-    internal class MessageValidator : IMessageValidator
+    public class MessageValidator : IMessageValidator
     {
         public ReceiverSignOptions ValidateOptions { get; protected set; }
 
@@ -17,7 +16,7 @@ namespace NodeNet.NodeNet.RSASigner
                 throw new ArgumentException(nameof(options));
         }
 
-        public bool Validate(Message.Message message)
+        public bool Validate(Message message)
         {
             if (ValidateOptions == null)
                 throw new NullReferenceException(nameof(ValidateOptions));
@@ -28,6 +27,11 @@ namespace NodeNet.NodeNet.RSASigner
                 formatter.Serialize(memoryStream, message.Data);
                 return RSAEncryption.VerifySign(memoryStream.ToArray(), message.MessageSign, ValidateOptions);
             }
+        }
+
+        public static IReceiverSignOptions GetReceiverValidateOptions(Message message)
+        {
+            return new ReceiverSignOptions(message.Info.SenderPublicKey);
         }
     }
 }

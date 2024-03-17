@@ -1,17 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using NodeNet.NodeNet.Communication;
+﻿using NodeNet.NodeNet.Communication;
 using NodeNet.NodeNet.NodeActions;
+using System.Net.Sockets;
 
 namespace NodeNet.NodeNet.TcpCommunication
 {
-    internal class NodeTcpListener : INodeListener, ITcpAddressProvider
+    public class NodeTcpListener : INodeListener, ITcpAddressProvider
     {
         public bool IsListening { get; set; } = false;
         public int ListenPort { get; set; } = 8080;
@@ -54,12 +47,15 @@ namespace NodeNet.NodeNet.TcpCommunication
                     var connection = new NodeTcpConnection(tcpConnection);
                     connection.TcpAddressProvider = this;
 
-                    PingPong.Pong(connection).ContinueWith((result) => {
+                    PingPong.Pong(connection).ContinueWith((result) =>
+                    {
                         if (result.Result)
                             ConnectionOpened?.Invoke(connection);
                     });
                 }
-            } catch (OperationCanceledException cancelException) { 
+            }
+            catch (OperationCanceledException cancelException)
+            {
                 IsListening = false;
             }
         }

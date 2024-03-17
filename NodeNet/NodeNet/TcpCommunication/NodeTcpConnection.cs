@@ -1,27 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Newtonsoft.Json;
+using NodeNet.NodeNet.Communication;
 using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
-using NodeNet.NodeNet.Communication;
+using NodeNet.NodeNet.JsonStreamParser;
 
 namespace NodeNet.NodeNet.TcpCommunication
 {
-    internal class NodeTcpConnection : INodeConnection
+    public class NodeTcpConnection : INodeConnection
     {
         public bool IsListening { get; set; } = false;
-        protected Task? ListeningTask { get; set; } = null;
         public TcpClient TcpClient { get; protected set; }
         public ITcpAddressProvider TcpAddressProvider { get; set; }
-
-        protected Queue<Message.Message> MessagesQueue = new Queue<Message.Message>();
         public event Action<INodeConnection> MessageReceived;
         public event Action<INodeConnection> ConnectionClosed;
+        protected Thread ListeningThread = null;
+        protected JsonStreamParser.JsonStreamParser jsonStreamParser = new JsonStreamParser.JsonStreamParser();
+        protected Queue<NodeNet.Message.Message> messagesQueue = new Queue<NodeNet.Message.Message>();
 
 
         public NodeTcpConnection()
@@ -33,43 +30,50 @@ namespace NodeNet.NodeNet.TcpCommunication
         {
             TcpClient = tcpClient;
         }
-        
-        public bool Connect( string addr )
+
+        public bool Connect(string addr)
         {
             string ip = addr.Split(":")[0];
             string port = addr.Split(":")[1];
             try
             {
+                jsonStreamParser = new JsonStreamParser.JsonStreamParser();
                 TcpClient.Connect(ip, Convert.ToInt32(port));
                 return true;
-            } catch (Exception ex) { }
+            }
+            catch (Exception ex) { }
             return false;
         }
 
-        public Message.Message? GetLastMessage()
+        public NodeNet.Message.Message? GetLastMessage()
         {
-            return MessagesQueue.Count != 0 ? MessagesQueue.Dequeue() : null;
+            lock (this)
+                return messagesQueue.Count != 0 ? messagesQueue.Dequeue() : null;
         }
 
-        public List<Message.Message> GetMessageList()
+        public List<NodeNet.Message.Message> GetMessageList()
         {
-            var messageList = MessagesQueue.ToList<Message.Message>();
-            MessagesQueue.Clear();
+            var messageList = messagesQueue.ToList();
+            messagesQueue.Clear();
             return messageList;
         }
 
         public void ListenMessages()
         {
             IsListening = true;
-            Task.Run(() => MessageListener());
+            ListeningThread = new Thread(() => MessageListener());
+            ListeningThread.Start();
         }
 
-        public void SendMessage(Message.Message message)
+        public async Task SendMessage(NodeNet.Message.Message message)
         {
-            var jsonMessage = JsonSerializer.Serialize(message);
+            // Serialization can be performed in parallel, so lock is not needed here.
+            var jsonMessage = JsonConvert.SerializeObject(message);
             var segment = new ArraySegment<byte>(Encoding.UTF8.GetBytes(jsonMessage));
             var stream = TcpClient.GetStream();
-            stream.Write(segment);
+
+            // Only one execution thread can write to a data stream at a time, otherwise it is impossible to interpret the data correctly.
+            await stream.WriteAsync(segment);
         }
 
         public async Task SendRawData(byte[] data, CancellationToken cancellationToken)
@@ -79,7 +83,7 @@ namespace NodeNet.NodeNet.TcpCommunication
 
         public async Task<byte[]> ReceiveRawData(CancellationToken cancellationToken)
         {
-            ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[4096]);
+            ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[1024 * 16]);
             try
             {
                 var size = await TcpClient.GetStream().ReadAsync(buffer, cancellationToken);
@@ -98,39 +102,32 @@ namespace NodeNet.NodeNet.TcpCommunication
             if (IsListening)
                 ConnectionClosed?.Invoke(this);
             IsListening = false;
-            
+
         }
 
-        protected async Task MessageListener() {
-            // TODO: verify disconnect execution
-            var buffer = new ArraySegment<byte>(new byte[1024*16]);
+        protected async Task MessageListener()
+        {
+            // TODO: verify received part is correct json document, receive until correct json will be received
+            var inputStream = TcpClient.GetStream();
             try
             {
                 while (IsListening)
                 {
-                    var size = await TcpClient.GetStream().ReadAsync(buffer, CancellationToken.None);
-                    try
-                    {
-                        var jsonString = Encoding.UTF8.GetString(buffer.Take(size).ToArray());
-                        var message = JsonSerializer.Deserialize<Message.Message>(jsonString);
-                        Array.Fill<byte>(buffer.Array, 0, 0, 1024 * 16);
+                    var parsedObject = await jsonStreamParser.ParseJsonObject(inputStream, CancellationToken.None);
+                    var messageObject = parsedObject.Deserialize<NodeNet.Message.Message>();
+                    if (messageObject is NodeNet.Message.Message message)
                         AddMessageToQueue(message);
-                        MessageReceived?.Invoke(this);
-                    }
-                    catch (Exception ex)
-                    {
-                        continue;
-                    }
                 }
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
             }
             CloseConnection();
         }
 
-        protected void AddMessageToQueue(Message.Message message)
+        protected void AddMessageToQueue(NodeNet.Message.Message message)
         {
-            MessagesQueue.Enqueue(message);
+            messagesQueue.Enqueue(message);
             MessageReceived?.Invoke(this);
         }
 

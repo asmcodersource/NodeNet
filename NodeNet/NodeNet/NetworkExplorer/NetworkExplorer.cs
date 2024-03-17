@@ -1,13 +1,8 @@
-﻿using Newtonsoft.Json;
-using NodeNet.NodeNet.Communication;
-using NodeNet.NodeNet.Message;
+﻿using NodeNet.NodeNet.Message;
 using NodeNet.NodeNet.NetworkExplorer.Requests;
-using NodeNet.NodeNet.RSASigner;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Newtonsoft.Json;
+using NodeNet.NodeNet;
+using NodeNet.NodeNet.Communication;
 
 namespace NodeNet.NodeNet.NetworkExplorer
 {
@@ -15,7 +10,7 @@ namespace NodeNet.NodeNet.NetworkExplorer
     /// Provide methods of network explore requests
     /// Used to store and remember nodes address
     /// </summary>
-    internal class NetworkExplorer
+    public class NetworkExplorer
     {
         public Node Node { get; protected set; }
         public List<RecentNodeConnection> recentNodeConnections { get; protected set; } = new List<RecentNodeConnection>();
@@ -27,11 +22,11 @@ namespace NodeNet.NodeNet.NetworkExplorer
         {
             Middleware = new NetworkExplorerMiddleware(node, this);
             this.filePath = filePath;
-            this.Node = node;
-            LoadRecentConnectionsFromFile(filePath);
+            Node = node;
         }
 
-        // TODO: change this to something legal
+        //
+        // : change this to something legal
         ~NetworkExplorer()
         {
             SaveRecentConnectionsToFile(filePath);
@@ -48,14 +43,14 @@ namespace NodeNet.NodeNet.NetworkExplorer
                 var echoRequest = new EchoRequest();
                 echoRequest.MyAddress = connection.GetConnectionAddress();
                 string jsonObject = JsonConvert.SerializeObject(echoRequest);
-                var messageInfo = new MessageInfo(Node.SignOptions.PublicKey, String.Empty, true);
+                var messageInfo = new MessageInfo(Node.SignOptions.PublicKey, string.Empty, true);
                 var message = new Message.Message(messageInfo, jsonObject);
                 Node.MessageSigner.Sign(message);
                 connection.SendMessage(message);
             }
         }
 
-        public void UpdateConnectionInfo( INodeConnection nodeConnection )
+        public void UpdateConnectionInfo(INodeConnection nodeConnection)
         {
             UpdateConnectionInfo(nodeConnection.GetConnectionAddress());
         }
@@ -92,10 +87,13 @@ namespace NodeNet.NodeNet.NetworkExplorer
                 if (File.Exists(path) == false)
                     return;
                 var stream = File.OpenRead(path);
-                var file = new System.IO.StreamReader(stream);
+                var file = new StreamReader(stream);
                 var savedNodeConnections = JsonConvert.DeserializeObject<List<RecentNodeConnection>>(file.ReadToEnd());
+                file.Close();
                 recentNodeConnections.AddRange(savedNodeConnections);
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 throw new Exception("Something wen't wrong with reading connections from file");
             }
         }
@@ -104,11 +102,13 @@ namespace NodeNet.NodeNet.NetworkExplorer
         {
             try
             {
-                var stream = File.OpenWrite(path);
-                var file = new System.IO.StreamWriter(stream);
                 var serrializedList = JsonConvert.SerializeObject(recentNodeConnections, Formatting.Indented);
+                var stream = File.OpenWrite(path);
+                var file = new StreamWriter(stream);
                 file.Write(serrializedList);
-            } catch (Exception ex)
+                file.Close();
+            }
+            catch (Exception ex)
             {
                 throw new Exception("Something wen't wrong with writting connections to file");
             }

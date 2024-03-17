@@ -3,31 +3,26 @@ using NodeNet.NodeNet.Message;
 using NodeNet.NodeNet.NetworkExplorer.Requests;
 using NodeNet.NodeNet.NetworkExplorer.Responses;
 using NodeNet.NodeNet.ReceiveMiddleware;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NodeNet.NodeNet.NetworkExplorer
 {
-    internal class NetworkExplorerMiddleware : IReceiveMiddleware
+    public class NetworkExplorerMiddleware : IReceiveMiddleware
     {
         public NetworkExplorer Explorer { get; protected set; }
         public Node Node { get; protected set; }
         public IReceiveMiddleware NextReceiveMiddleware { get; protected set; }
         public IReceiveMiddleware Next { get; protected set; } = null;
 
-        public NetworkExplorerMiddleware(Node node ,NetworkExplorer explorer)
+        public NetworkExplorerMiddleware(Node node, NetworkExplorer explorer)
         {
             // would be used to store new connections
-            this.Node = node;
-            this.Explorer = explorer;
+            Node = node;
+            Explorer = explorer;
         }
 
         public bool Invoke(MessageContext messageContext)
         {
-            if( messageContext.Message.Info.IsTechnical != true)
+            if (messageContext.Message.Info.IsTechnical != true)
                 return Next == null ? true : Next.Invoke(messageContext);
             AcceptExporerMessages(messageContext);
             return Next == null ? true : Next.Invoke(messageContext);
@@ -46,9 +41,9 @@ namespace NodeNet.NodeNet.NetworkExplorer
             var messageType = Type.GetType(receivedType);
             var message = JsonConvert.DeserializeObject(requestJson, messageType);
 
-            if ( message is IRequest request)
+            if (message is IRequest request)
             {
-                switch(request)
+                switch (request)
                 {
                     case EchoRequest echoRequest:
                         // Should be ok?
@@ -59,7 +54,7 @@ namespace NodeNet.NodeNet.NetworkExplorer
                         break;
                 };
             }
-            if( message is IResponse response)
+            if (message is IResponse response)
             {
                 switch (response)
                 {

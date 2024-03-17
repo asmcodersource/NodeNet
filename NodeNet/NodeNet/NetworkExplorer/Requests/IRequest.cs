@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace NodeNet.NodeNet.NetworkExplorer.Requests
+﻿namespace NodeNet.NodeNet.NetworkExplorer.Requests
 {
-    internal abstract class IRequest
+    public abstract class IRequest
     {
     }
 }

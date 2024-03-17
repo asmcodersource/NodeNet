@@ -1,14 +1,9 @@
 ﻿using NodeNet.NodeNet.Communication;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.NetworkInformation;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace NodeNet.NodeNet.NodeActions
 {
-    internal class PingPong
+    public class PingPong
     {
         protected const string PingData = "NodeNetPingMessage";
         protected const string PongData = "NodeNetPongMessage";
@@ -27,7 +22,8 @@ namespace NodeNet.NodeNet.NodeActions
                 var responseString = Encoding.UTF8.GetString(response, 0, response.Length);
                 if (responseString.Equals(PongData))
                     return true;
-            } catch (Exception ex) { }
+            }
+            catch (Exception ex) { }
             return false;
         }
 
@@ -39,7 +35,8 @@ namespace NodeNet.NodeNet.NodeActions
                 cancellationTokenSource.CancelAfter(5000);
                 var response = await connection.ReceiveRawData(cancellationTokenSource.Token);
                 var responseString = Encoding.UTF8.GetString(response, 0, response.Length);
-                if (responseString.Equals(PingData)) {
+                if (responseString.Equals(PingData))
+                {
                     await connection.SendRawData(Encoding.UTF8.GetBytes(PongData), cancellationTokenSource.Token);
                     return true;
                 }

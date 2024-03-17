@@ -1,15 +1,8 @@
-﻿using NodeNet.NodeNet.Communication;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace NodeNet.NodeNet.NetworkExplorer
+﻿namespace NodeNet.NodeNet.NetworkExplorer
 {
-    internal record RecentNodeConnection
+    public record RecentNodeConnection
     {
-        public String Address { get; set; }
+        public string Address { get; set; }
         public DateTime LastConnectionTime { get; set; }
         public DateTime LastOnlineTime { get; set; }
 

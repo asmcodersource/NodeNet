@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace NodeNet.NodeNet.Communication
+﻿namespace NodeNet.NodeNet.Communication
 {
-    internal interface INodeSender
+    public interface INodeSender
     {
-        public void SendMessage(Message.Message message);
+        public Task SendMessage(NodeNet.Message.Message message);
     }
 }

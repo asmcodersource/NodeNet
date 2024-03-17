@@ -1,20 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
-
-namespace NodeNet.NodeNet.Message
+﻿namespace NodeNet.NodeNet.Message
 {
     // Mean one full received message
     // Can be broadcast, or personal
     [Serializable]
-    internal class Message
+    public class Message
     {
         public MessageInfo Info { get; protected set; }
-        public String Data { get; protected set; } = "";
+        public string Data { get; protected set; } = "";
         public string MessageSign { get; protected set; } = "";
         public int TimeToLive { get; protected set; } = 128;
 
@@ -25,7 +17,7 @@ namespace NodeNet.NodeNet.Message
             MessageSign = messageSign;
         }
 
-        public void SetMessageSign(String sign)
+        public void SetMessageSign(string sign)
         {
             // should be valid...
             MessageSign = sign;

@@ -4,6 +4,7 @@ using NodeNet.NodeNet.NodeActions;
 using NodeNet.NodeNet.ReceiveMiddleware;
 using NodeNet.NodeNet.TcpCommunication;
 using NodeNet.NodeNet.RSAEncryptions;
+using System;
 
 namespace NodeNet.NodeNet
 {
@@ -43,6 +44,7 @@ namespace NodeNet.NodeNet
             node.ConnectionsListener.ConnectionOpened += node.NewConnectionHandler;
             node.ConnectionsListener.StartListening();
 
+            Serilog.Log.Verbose($"NodeNet node localhost:{node.GetNodeTcpPort()} | Started");
             return node;
         }
 
@@ -78,6 +80,7 @@ namespace NodeNet.NodeNet
             pingTask.Wait();
             if (pingTask.Result)
             {
+                Serilog.Log.Verbose($"NodeNet node locahost:{GetNodeTcpPort()} | Succesfully connected to the {url}");
                 NewConnectionHandler(connection);
                 return true;
             }
@@ -105,8 +108,9 @@ namespace NodeNet.NodeNet
             MiddlewarePipeline = new MiddlewarePipeline();
             MiddlewarePipeline.AddHandler(signMiddleware);
             MiddlewarePipeline.AddHandler(cacheMiddleware);
-            //MiddlewarePipeline.AddHandler(floodProtectorMiddleware);
-            //MiddlewarePipeline.AddHandler(successTerminator);
+            MiddlewarePipeline.AddHandler(floodProtectorMiddleware);
+            MiddlewarePipeline.AddHandler(NetworkExplorer.Middleware);
+            MiddlewarePipeline.AddHandler(successTerminator);
         }
 
         protected void NewConnectionHandler(INodeConnection nodeConnection)
@@ -131,9 +135,13 @@ namespace NodeNet.NodeNet
                 var msgPassMiddleware = MiddlewarePipeline.Handle(msgContext);
                 if (msgPassMiddleware)
                 {
+                    Serilog.Log.Verbose("NodeNet node localhost:{node.GetNodeTcpPort()} | Message received");
                     MessageReceived?.Invoke(msgContext);
                     if (msgContext.Message.Info.ReceiverPublicKey == SignOptions.PublicKey)
+                    {
                         PersonalMessageReceived?.Invoke(msgContext);
+                        Serilog.Log.Debug("NodeNet node localhost:{node.GetNodeTcpPort()} | Personal message received");
+                    }
                     if (AutoRepeater is true)
                     {
                         var connections = Connections.Connections();

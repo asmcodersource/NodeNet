@@ -18,7 +18,7 @@ namespace NodeNet.NodeNet.NetworkExplorer
 
         public NetworkExplorerMiddleware Middleware { get; set; }
 
-        public NetworkExplorer(Node node, string filePath = "explorer.dat")
+        public NetworkExplorer(Node node, string filePath = "explorer.json")
         {
             Middleware = new NetworkExplorerMiddleware(node, this);
             this.filePath = filePath;
@@ -62,6 +62,7 @@ namespace NodeNet.NodeNet.NetworkExplorer
             // its new connection, just save
             if (index == -1)
             {
+                Serilog.Log.Debug($"NodeNet network explorer | New node explored.");
                 recentNodeConnections.Add(recentNodeConnection);
                 return;
             }
@@ -91,6 +92,7 @@ namespace NodeNet.NodeNet.NetworkExplorer
                 var savedNodeConnections = JsonConvert.DeserializeObject<List<RecentNodeConnection>>(file.ReadToEnd());
                 file.Close();
                 recentNodeConnections.AddRange(savedNodeConnections);
+                Serilog.Log.Debug($"NodeNet network explorer | Loaded recent connections({savedNodeConnections.Count()}) from file.");
             }
             catch (Exception ex)
             {
@@ -107,6 +109,7 @@ namespace NodeNet.NodeNet.NetworkExplorer
                 var file = new StreamWriter(stream);
                 file.Write(serrializedList);
                 file.Close();
+                Serilog.Log.Debug($"NodeNet network explorer | Saved recent connections({recentNodeConnections.Count()}) to file.");
             }
             catch (Exception ex)
             {

@@ -1,5 +1,6 @@
 ﻿using NodeNet.NodeNet.Communication;
 using NodeNet.NodeNet.NodeActions;
+using System.Net;
 using System.Net.Sockets;
 
 namespace NodeNet.NodeNet.TcpCommunication
@@ -67,7 +68,7 @@ namespace NodeNet.NodeNet.TcpCommunication
 
         public int GetNodeTcpPort()
         {
-            return ListenPort;
+            return ((IPEndPoint)TcpListener.LocalEndpoint).Port;
         }
 
         public string GetNodeTcpIP()

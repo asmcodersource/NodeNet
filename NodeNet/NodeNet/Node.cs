@@ -135,12 +135,12 @@ namespace NodeNet.NodeNet
                 var msgPassMiddleware = MiddlewarePipeline.Handle(msgContext);
                 if (msgPassMiddleware)
                 {
-                    Serilog.Log.Verbose("NodeNet node localhost:{node.GetNodeTcpPort()} | Message received");
+                    Serilog.Log.Verbose($"NodeNet node localhost:{GetNodeTcpPort()} | Message received");
                     MessageReceived?.Invoke(msgContext);
                     if (msgContext.Message.Info.ReceiverPublicKey == SignOptions.PublicKey)
                     {
                         PersonalMessageReceived?.Invoke(msgContext);
-                        Serilog.Log.Debug("NodeNet node localhost:{node.GetNodeTcpPort()} | Personal message received");
+                        Serilog.Log.Debug($"NodeNet node localhost:{GetNodeTcpPort()} | Personal message received");
                     }
                     if (AutoRepeater is true)
                     {

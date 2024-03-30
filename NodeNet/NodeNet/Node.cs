@@ -64,7 +64,7 @@ namespace NodeNet.NodeNet
             {
                 List<Task> tasks = new List<Task>();
                 foreach (var connection in connections)
-                    tasks.Add(connection.SendMessage(message));
+                    tasks.Add( Task.Run( () => connection.SendMessage(message) ) );
                 await Task.WhenAll(tasks);
             });
         }

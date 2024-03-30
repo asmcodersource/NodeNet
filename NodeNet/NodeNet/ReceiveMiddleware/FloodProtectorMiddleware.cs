@@ -9,7 +9,7 @@ namespace NodeNet.NodeNet.ReceiveMiddleware
         protected Dictionary<INodeConnection, ulong> dataPerConnection = new Dictionary<INodeConnection, ulong>();
         protected Queue<ReceivedDataInfo> receiveDataQueue = new Queue<ReceivedDataInfo>();
         public IReceiveMiddleware Next { get; protected set; } = null;
-        public ulong MaxScorePerConnection { get; set; } = 500_000;
+        public ulong MaxScorePerConnection { get; set; } = 50_000_000;
 
         public bool Invoke(MessageContext messageContext)
         {

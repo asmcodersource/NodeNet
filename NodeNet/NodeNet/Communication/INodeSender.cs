@@ -2,6 +2,6 @@
 {
     public interface INodeSender
     {
-        public Task SendMessage(NodeNet.Message.Message message);
+        public void SendMessage(NodeNet.Message.Message message);
     }
 }

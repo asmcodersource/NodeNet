@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NodeNet", "NodeNet\NodeNet.csproj", "{B507EF54-0903-44E7-A7B9-32CBD9C1EC77}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NodeNet", "NodeNet\NodeNet.csproj", "{B507EF54-0903-44E7-A7B9-32CBD9C1EC77}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{F16F36F7-37DD-4931-8B40-36B641939BF0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{B507EF54-0903-44E7-A7B9-32CBD9C1EC77}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B507EF54-0903-44E7-A7B9-32CBD9C1EC77}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B507EF54-0903-44E7-A7B9-32CBD9C1EC77}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F16F36F7-37DD-4931-8B40-36B641939BF0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F16F36F7-37DD-4931-8B40-36B641939BF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F16F36F7-37DD-4931-8B40-36B641939BF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F16F36F7-37DD-4931-8B40-36B641939BF0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

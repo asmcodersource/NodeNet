@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NodeNet.NodeNetSession.SessionWrapper.ConnectionTasks
+namespace NodeNet.NodeNetSession.Session
 {
-    internal enum ConnectionResult
+    public enum ConnectionResult
     {
         Connected,
         Fault,

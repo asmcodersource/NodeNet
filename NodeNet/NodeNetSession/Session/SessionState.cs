@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NodeNet.SessionWrapper.SessionWrapper
+namespace NodeNet.NodeNetSession.Session
 {
-    internal enum SessionState
+    public enum SessionState
     {
         Created,
         WaitingForHandshake,

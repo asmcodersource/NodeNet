@@ -9,54 +9,60 @@ using NodeNet.NodeNet;
 using NodeNet.NodeNet.Message;
 using NodeNet.NodeNetSession.MessageWaiter;
 using NodeNet.NodeNetSession.SessionListener;
+using NodeNet.NodeNetSession.SessionPredictes;
+using Serilog.Context;
 
 namespace NodeNet.NodeNetSession.Session
 {
-    public record HandshakeRequest(string Resource, string Session);
+    public record HandshakeRequest(string Resource);
 
     public class SessionHandshakeAction
     {
         private readonly Node node;
         private readonly MessageWaiter.MessageWaiter messageWaiter;
+        public readonly string TargetPublicKey;
+        public readonly string TargetResource;
+        public readonly string CurrentSessionId;
 
-        public SessionHandshakeAction(Node node)
+        public SessionHandshakeAction(Node node, string currentSessionId, string targetPublicKey, string resource)
         {
             this.node = node;
             messageWaiter = new MessageWaiter.MessageWaiter(node);
-            messageWaiter.MessageFilterPredicate = WhenDataIsPredicate<HandshakeResponse>.MessageFilterPredicate;
+            messageWaiter.MessageFilterPredicate = MessageFilterAndPredicate.And(
+                MessageWhenDataIsPredicate<SessionMessage.SessionMessage>.CreateFilter(),
+                MessageReceiverFilterPredicate.CreateFilter(node.SignOptions.PublicKey),
+                MessageSenderFilterPredicate.CreateFilter(targetPublicKey),
+                ReceiverSessionFilterPredicate.CreateFilter(currentSessionId)
+            );
+            TargetPublicKey = targetPublicKey;
+            TargetResource = resource;
+            CurrentSessionId = currentSessionId;
         }
 
-        public async Task<bool> MakeHandshake(string target, string targetResource, string session)
+        public async Task<string> MakeHandshake()
         {
-            return await MakeHandshake(target, targetResource, session, CancellationToken.None); 
+            return await MakeHandshake(CancellationToken.None); 
         }
 
-        public async Task<bool> MakeHandshake(string target, string targetResource, string session, CancellationToken cancellationToken)
+        public async Task<string> MakeHandshake(CancellationToken cancellationToken)
         {
+            messageWaiter.ClearQueue();
             messageWaiter.IsAllowListening = true;
-            try
-            {
-                // Send handshake request
-                var handshakeRequest = new HandshakeRequest(targetResource, session);
-                var jsonRaw = JsonSerializer.Serialize(handshakeRequest);
-                await node.SendMessage(jsonRaw, target);
-                // Receive handshake response
-                HandshakeResponse? handshakeResponse = null;
-                do
-                {
-                    var responseMsgContext = await messageWaiter.WaitForMessage(cancellationToken);
-                    if (responseMsgContext.Message.Info.SenderPublicKey != target)
-                        continue;
-                    var responseJsonDocument = JsonDocument.Parse(responseMsgContext.Message.Data);
-                    handshakeResponse = responseJsonDocument.Deserialize<HandshakeResponse>();
-                    if (handshakeResponse is null)
-                        return false;
-                } while (string.Equals(handshakeResponse.Session, session) is not true );
-                return true;
-            }
-            catch { /* In case of any exception, just take session as faulted connection */ }
+            // Send handshake request
+            var handshakeRequest = new HandshakeRequest(TargetResource);
+            var handshakeRequestJsonRaw = JsonSerializer.Serialize(handshakeRequest);
+            var sessionMessage = new SessionMessage.SessionMessage(
+                new SessionMessage.SessionMessageInfo("", CurrentSessionId),
+                handshakeRequestJsonRaw
+            );
+            var sessionMessageJson = JsonSerializer.Serialize(sessionMessage);
+            await node.SendMessage(sessionMessageJson, TargetPublicKey);
+            // Receive handshake response
+            var responseMsgContext = await messageWaiter.WaitForMessage(cancellationToken);
+            var sessionMsgDocument = JsonDocument.Parse(responseMsgContext.Message.Data);
+            var sessionMsg = sessionMsgDocument.Deserialize<SessionMessage.SessionMessage>();
             messageWaiter.IsAllowListening = false;
-            return false;
+            return sessionMsg.Info.SenderSessionId;
         }
     }
 }

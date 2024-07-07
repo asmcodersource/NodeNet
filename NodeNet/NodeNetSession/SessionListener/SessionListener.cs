@@ -7,7 +7,7 @@ using NodeNet.NodeNet;
 
 namespace NodeNet.NodeNetSession.SessionListener
 {
-    public class SessionListener
+    public class SessionListener : IDisposable
     {
         public event Action<Session.Session> NewSessionCreated;
         public string Resource { get; protected set; }
@@ -15,12 +15,21 @@ namespace NodeNet.NodeNetSession.SessionListener
         private CancellationTokenSource? listeningCancellationTokenSource;
         private readonly SessionHandshakeHandler handshakeHandler;
         private readonly Node listeningNode;
+        private Task listeningTask;
 
         public SessionListener( Node node, string resource ) 
         {
             listeningNode = node;
-            handshakeHandler = new SessionHandshakeHandler(node);
+            handshakeHandler = new SessionHandshakeHandler(node, resource);
             Resource = resource;
+        }
+
+        public void Dispose()
+        {
+            if (listeningCancellationTokenSource is null)
+                return;
+            StopListening();
+            listeningTask.Wait();
         }
 
         public void StartListening()
@@ -31,7 +40,7 @@ namespace NodeNet.NodeNetSession.SessionListener
                     throw new InvalidOperationException("Session is already listening");
                 listeningCancellationTokenSource = new CancellationTokenSource();
                 handshakeHandler.StartMessageListening();
-                Task.Run(() => SessionListeningTask());
+                listeningTask = Task.Run(() => SessionListeningTask());
             }
         }
 
@@ -52,11 +61,11 @@ namespace NodeNet.NodeNetSession.SessionListener
             if (listeningCancellationTokenSource is null)
                 throw new NullReferenceException("cancellation token is has null value");
             var cancellationToken = listeningCancellationTokenSource.Token;
-            while( listeningCancellationTokenSource.Token.IsCancellationRequested is not true)
+            while(cancellationToken.IsCancellationRequested is not true)
             {
                 try
                 {
-                    var session = await handshakeHandler.HandleNextRequest(Resource, cancellationToken);
+                    var session = await handshakeHandler.HandleNextRequest(cancellationToken);
                     NewSessionCreated?.Invoke(session);
                 } catch { }
             }

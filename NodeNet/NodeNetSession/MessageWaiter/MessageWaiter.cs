@@ -11,9 +11,7 @@ using System.Collections;
 
 namespace NodeNet.NodeNetSession.MessageWaiter
 {
-    public delegate bool MessageFilterPredicate(MessageContext context);
-
-    internal class MessageWaiter
+    public class MessageWaiter
     {
         public MessageFilterPredicate MessageFilterPredicate { get; set; } = (msgContext) => true;
         public bool IsAllowListening { get; set; } = false;
@@ -58,7 +56,7 @@ namespace NodeNet.NodeNetSession.MessageWaiter
                     currentWaitingTasks.Except(new[] { targetTaskCTS })
                 );
                 // Set waiting task to canceled state
-                targetTaskCTS.SetCanceled();
+                targetTaskCTS.TrySetCanceled();
             }
         }
 

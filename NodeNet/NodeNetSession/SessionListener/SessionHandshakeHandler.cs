@@ -1,6 +1,7 @@
 ﻿using NodeNet.NodeNet;
 using NodeNet.NodeNetSession.MessageWaiter;
 using NodeNet.NodeNetSession.Session;
+using NodeNet.NodeNetSession.SessionPredictes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,18 +12,23 @@ using System.Threading.Tasks;
 
 namespace NodeNet.NodeNetSession.SessionListener
 {
-    public record HandshakeResponse(string Session);
+    public record HandshakeResponse();
 
     internal class SessionHandshakeHandler
     {
         private readonly Node node;
         private readonly MessageWaiter.MessageWaiter messageWaiter;
+        public readonly string ListeningResource;
 
-        public SessionHandshakeHandler(Node node)
+        public SessionHandshakeHandler(Node node, string listeningResource)
         {
             this.node = node;
+            ListeningResource = listeningResource;
             messageWaiter = new MessageWaiter.MessageWaiter(node);
-            messageWaiter.MessageFilterPredicate = WhenDataIsPredicate<HandshakeRequest>.MessageFilterPredicate;
+            messageWaiter.MessageFilterPredicate = MessageFilterAndPredicate.And(
+                MessageWhenDataIsPredicate<SessionMessage.SessionMessage>.CreateFilter(),
+                MessageReceiverFilterPredicate.CreateFilter(node.SignOptions.PublicKey)
+            );
         }
 
         public void StartMessageListening()
@@ -35,28 +41,33 @@ namespace NodeNet.NodeNetSession.SessionListener
             messageWaiter.IsAllowListening = false;
         }
 
-        public async Task<Session.Session> HandleNextRequest(string listeningResource)
+        public async Task<Session.Session> HandleNextRequest()
         {
-            return await HandleNextRequest(listeningResource, CancellationToken.None);
+            return await HandleNextRequest(CancellationToken.None);
         }
 
-        public async Task<Session.Session> HandleNextRequest(string listeningResource, CancellationToken cancellationToken)
+        public async Task<Session.Session> HandleNextRequest(CancellationToken cancellationToken)
         {
             // Wait for handshake request, and accept it
-            var handshakeMessage = await messageWaiter.WaitForMessage();
-            var handshakeJsonDocument = JsonDocument.Parse(handshakeMessage.Message.Data);
-            var handshakeRequest = handshakeJsonDocument.Deserialize<HandshakeRequest>();
-            if (handshakeRequest is null)
+            var msgContext = await messageWaiter.WaitForMessage(cancellationToken);
+            var sessionMsgDocument = JsonDocument.Parse(msgContext.Message.Data);
+            var sessionMsg = sessionMsgDocument.Deserialize<SessionMessage.SessionMessage>();
+            var sessionMsgDataDocument = JsonDocument.Parse(sessionMsg!.Data);
+            var handshakeRequest = sessionMsgDataDocument.Deserialize<HandshakeRequest>();
+            if( handshakeRequest is null )
                 throw new OperationCanceledException();
-            if( handshakeRequest.Resource != listeningResource )
+            if (handshakeRequest.Resource != ListeningResource)
                 throw new OperationCanceledException();
-            if( handshakeMessage.Message.Info.ReceiverPublicKey != node.SignOptions.PublicKey )
-                throw new OperationCanceledException();
-            // Make handshake response, send it back
-            var handshakeResponse = new HandshakeResponse(handshakeRequest.Session);
-            var handshakeResponseRawJson = JsonSerializer.Serialize(handshakeResponse);
-            await node.SendMessage(handshakeResponseRawJson, handshakeMessage.Message.Info.SenderPublicKey);
-            return new Session.Session(node, handshakeMessage.Message.Info.SenderPublicKey, handshakeResponse.Session, handshakeRequest.Resource);
+            // Handshake accepted
+            var session = new Session.Session(node, msgContext.Message.Info.SenderPublicKey, sessionMsg.Info.SenderSessionId, ListeningResource);
+            var handshakeResponseJson = JsonSerializer.Serialize(new HandshakeResponse());
+            var sessionMessage = new SessionMessage.SessionMessage(
+                   new SessionMessage.SessionMessageInfo(session.OppositeSessionId, session.CurrentSessionId),
+                   handshakeResponseJson
+            );
+            var sessionMessageJson = JsonSerializer.Serialize(sessionMessage);
+            await node.SendMessage(sessionMessageJson, msgContext.Message.Info.SenderPublicKey);
+            return session;
         }
     }
 }

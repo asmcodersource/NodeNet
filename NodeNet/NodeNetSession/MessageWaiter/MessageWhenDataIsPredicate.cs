@@ -1,4 +1,5 @@
 ﻿using NodeNet.NodeNet.Message;
+using NodeNet.NodeNetSession.SessionListener;
 using Serilog.Context;
 using System;
 using System.Collections.Generic;
@@ -10,9 +11,12 @@ using System.Threading.Tasks;
 namespace NodeNet.NodeNetSession.MessageWaiter
 {
     // I did something weird here...
-    public static class WhenDataIsPredicate<T>
+    public static class MessageWhenDataIsPredicate<T>
     {
-        static public MessageFilterPredicate MessageFilterPredicate = WhenDataIsPredicate<T>.Method;
+        static public MessageFilterPredicate CreateFilter()
+        {
+            return MessageWhenDataIsPredicate<T>.Method;
+        }
 
         static private bool Method(MessageContext messageContext)
         {

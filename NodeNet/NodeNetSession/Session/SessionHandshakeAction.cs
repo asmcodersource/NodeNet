@@ -9,7 +9,7 @@ using NodeNet.NodeNet;
 using NodeNet.NodeNet.Message;
 using NodeNet.NodeNetSession.MessageWaiter;
 using NodeNet.NodeNetSession.SessionListener;
-using NodeNet.NodeNetSession.SessionPredictes;
+using NodeNet.NodeNetSession.SessionPredicates;
 using Serilog.Context;
 
 namespace NodeNet.NodeNetSession.Session

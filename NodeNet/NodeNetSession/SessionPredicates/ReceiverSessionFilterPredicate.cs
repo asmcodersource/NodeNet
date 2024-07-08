@@ -8,7 +8,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace NodeNet.NodeNetSession.SessionPredictes
+namespace NodeNet.NodeNetSession.SessionPredicates
 {
     public class ReceiverSessionFilterPredicate
     {

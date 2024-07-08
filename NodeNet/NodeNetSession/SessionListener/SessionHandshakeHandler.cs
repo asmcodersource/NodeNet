@@ -1,7 +1,7 @@
 ﻿using NodeNet.NodeNet;
 using NodeNet.NodeNetSession.MessageWaiter;
 using NodeNet.NodeNetSession.Session;
-using NodeNet.NodeNetSession.SessionPredictes;
+using NodeNet.NodeNetSession.SessionPredicates;
 using System;
 using System.Collections.Generic;
 using System.Linq;

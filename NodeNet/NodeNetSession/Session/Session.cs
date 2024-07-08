@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using NodeNet.NodeNet.Message;
 using NodeNet.NodeNetSession.MessageWaiter;
-using NodeNet.NodeNetSession.SessionPredictes;
+using NodeNet.NodeNetSession.SessionPredicates;
 using System.Text.Json;
 
 namespace NodeNet.NodeNetSession.Session

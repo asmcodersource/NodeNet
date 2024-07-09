@@ -1,8 +1,6 @@
-﻿namespace NodeNet.NodeNet.RSAEncryptions
+﻿using NodeNet.NodeNet.SignOptions;
+
+namespace NodeNet.NodeNet.RSAEncryptions
 {
-    public interface ISenderSignOptions
-    {
-        public string PublicKey { get; protected set; }
-        public string PrivateKey { get; protected set; }
-    }
+    public interface ISenderSignOptions: SignOptions.ISenderSignOptions{}
 }

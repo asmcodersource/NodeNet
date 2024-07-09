@@ -42,7 +42,7 @@ namespace NodeNet.NodeNet
             listener.Options = listenerOptions;
             node.ConnectionsListener = listener;
             node.ConnectionsListener.ConnectionOpened += node.NewConnectionHandler;
-            node.ConnectionsListener.StartListening(node.SignOptions.PublicKey);
+            node.ConnectionsListener.StartListening(options);
 
             Serilog.Log.Verbose($"NodeNet node localhost:{node.GetNodeTcpPort()} | Started");
             return node;
@@ -90,7 +90,7 @@ namespace NodeNet.NodeNet
             bool result = connection.Connect(url);
             if (result == false)
                 return false;
-            var pingTask = PingPong.Ping(connection, SignOptions.PublicKey);
+            var pingTask = PingPong.Ping(connection, SignOptions);
             pingTask.Wait();
             if (pingTask.Result)
             {

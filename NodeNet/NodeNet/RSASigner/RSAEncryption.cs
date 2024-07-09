@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
+using NodeNet.NodeNet.SignOptions;
 
 namespace NodeNet.NodeNet.RSASigner
 {
@@ -20,7 +21,7 @@ namespace NodeNet.NodeNet.RSASigner
             }
         }
 
-        public static String Sign(byte[] data, SenderSignOptions options)
+        public static String Sign(byte[] data, ISenderSignOptions options)
         {
             RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
             rsa.FromXmlString(options.PrivateKey);
@@ -29,7 +30,7 @@ namespace NodeNet.NodeNet.RSASigner
             return signatureString;
         }
 
-        public static bool VerifySign(byte[] data, string sign, ReceiverSignOptions options)
+        public static bool VerifySign(byte[] data, string sign, IReceiverSignOptions options)
         {   
             var signBytes = Convert.FromBase64String(sign);
             RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();

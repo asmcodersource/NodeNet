@@ -17,5 +17,10 @@ namespace NodeNet.NodeNet.RSASigner
         {
             PublicKey = message.Info.SenderPublicKey;
         }
+
+        public ReceiverSignOptions(string publicKey)
+        {
+            PublicKey = publicKey;
+        }
     }
 }

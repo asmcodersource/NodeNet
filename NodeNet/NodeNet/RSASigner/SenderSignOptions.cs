@@ -7,7 +7,7 @@ using NodeNet.NodeNet.SignOptions;
 
 namespace NodeNet.NodeNet.RSASigner
 {
-    internal class SenderSignOptions : ISenderSignOptions
+    public class SenderSignOptions : ISenderSignOptions
     {
         public string PublicKey { get; set; }
         public string PrivateKey { get; set; }

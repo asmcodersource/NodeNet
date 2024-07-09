@@ -1,4 +1,10 @@
-﻿using System.Security.Cryptography;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Security.Cryptography;
+using NodeNet.NodeNet.SignOptions;
 
 namespace NodeNet.NodeNet.RSAEncryptions
 {
@@ -15,7 +21,7 @@ namespace NodeNet.NodeNet.RSAEncryptions
             }
         }
 
-        public static string Sign(byte[] data, SenderSignOptions options)
+        public static String Sign(byte[] data, ISenderSignOptions options)
         {
             RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
             rsa.FromXmlString(options.PrivateKey);
@@ -24,7 +30,7 @@ namespace NodeNet.NodeNet.RSAEncryptions
             return signatureString;
         }
 
-        public static bool VerifySign(byte[] data, string sign, ReceiverSignOptions options)
+        public static bool VerifySign(byte[] data, string sign, IReceiverSignOptions options)
         {
             try
             {
@@ -32,8 +38,10 @@ namespace NodeNet.NodeNet.RSAEncryptions
                 RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
                 rsa.FromXmlString(options.PublicKey);
                 return rsa.VerifyData(data, SHA256.Create(), signBytes);
-            }
-            catch { return false; }
+            } catch (Exception exception) 
+            when (exception.GetType() == typeof(ArgumentNullException) || exception.GetType() == typeof(ArgumentException))
+            { /* Ignore these types of errors */ }
+            return false;
         }
     }
 }

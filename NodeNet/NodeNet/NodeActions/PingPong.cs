@@ -1,6 +1,6 @@
 ﻿using NodeNet.NodeNet.Communication;
 using NodeNet.NodeNet.NetworkExplorer.Responses;
-using NodeNet.NodeNet.RSASigner;
+using NodeNet.NodeNet.RSAEncryptions;
 using NodeNet.NodeNet.SignOptions;
 using System.Text;
 using System.Text.Json;
@@ -117,13 +117,13 @@ namespace NodeNet.NodeNet.NodeActions
                 RandomNumber = pingPongData.RandomNumber,
                 Signature = null,
             };
-            return RSASigner.RSAEncryption.VerifySign(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(tempObject)), signature, receiverSignOptions);
+            return RSAEncryptions.RSAEncryption.VerifySign(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(tempObject)), signature, receiverSignOptions);
         }
 
         private static void SignPingPongData(PingPongData pingPongData, ISenderSignOptions senderSignOptions)
         {
             pingPongData.Signature = null;
-            var signature = RSASigner.RSAEncryption.Sign(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(pingPongData)), senderSignOptions);
+            var signature = RSAEncryptions.RSAEncryption.Sign(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(pingPongData)), senderSignOptions);
             pingPongData.Signature = signature;
         }
     }

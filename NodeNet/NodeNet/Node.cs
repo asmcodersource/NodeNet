@@ -4,6 +4,7 @@ using NodeNet.NodeNet.NodeActions;
 using NodeNet.NodeNet.ReceiveMiddleware;
 using NodeNet.NodeNet.TcpCommunication;
 using NodeNet.NodeNet.RSAEncryptions;
+using NodeNet.NodeNet.SignOptions;
 using System;
 
 namespace NodeNet.NodeNet
@@ -26,8 +27,8 @@ namespace NodeNet.NodeNet
         public static Node CreateRSAHttpNode(SenderSignOptions options, TcpListenerOptions listenerOptions)
         {
 
-            IMessageSigner messageSigner = new MessageSigner();
-            IMessageValidator messageValidator = new MessageValidator();
+            IMessageSigner messageSigner = new RsaMessageSigner();
+            IMessageValidator messageValidator = new RsaMessageValidator();
             messageSigner.SetSignOptions(options);
 
             Node node = new Node();

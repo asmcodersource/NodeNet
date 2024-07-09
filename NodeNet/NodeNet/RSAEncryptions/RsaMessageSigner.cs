@@ -1,10 +1,12 @@
 ﻿using NodeNet.NodeNet.RSAEncryptions;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using NodeNet.NodeNet.SignOptions;
+using NodeNet.NodeNet.Message;
 
-namespace NodeNet.NodeNet.Message
+namespace NodeNet.NodeNet.RSAEncryptions
 {
-    public class MessageSigner : IMessageSigner
+    public class RsaMessageSigner : IMessageSigner
     {
         public SenderSignOptions SignOptions { get; protected set; }
 
@@ -16,7 +18,7 @@ namespace NodeNet.NodeNet.Message
                 throw new ArgumentException(nameof(options));
         }
 
-        public void Sign(Message message)
+        public void Sign(Message.Message message)
         {
             if (SignOptions == null)
                 throw new NullReferenceException(nameof(SignOptions));

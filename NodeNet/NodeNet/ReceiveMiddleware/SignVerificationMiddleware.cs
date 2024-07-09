@@ -18,7 +18,7 @@ namespace NodeNet.NodeNet.ReceiveMiddleware
 
         public bool Invoke(MessageContext messageContext)
         {
-            var validateOptions = NodeNet.Message.MessageValidator.GetReceiverValidateOptions(messageContext.Message);
+            var validateOptions = NodeNet.RSAEncryptions.RsaMessageValidator.GetReceiverValidateOptions(messageContext.Message);
             bool signCorrect = false;
             lock (this)
             {

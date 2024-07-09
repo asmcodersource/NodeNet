@@ -42,31 +42,45 @@ namespace NodeNet.NodeNet
             listener.Options = listenerOptions;
             node.ConnectionsListener = listener;
             node.ConnectionsListener.ConnectionOpened += node.NewConnectionHandler;
-            node.ConnectionsListener.StartListening();
+            node.ConnectionsListener.StartListening(node.SignOptions.PublicKey);
 
             Serilog.Log.Verbose($"NodeNet node localhost:{node.GetNodeTcpPort()} | Started");
             return node;
         }
 
-        public async Task SendMessage(string messageContent, string receiver = null, bool isTechnical = false)
+        public void SendMessage(string messageContent, INodeConnection connection, string? receiver = null,  bool isTechnical = false)
         {
             if (MessageSigner == null || SignOptions == null || Connections == null)
                 throw new Exception("Node is not initialized!");
 
             if (receiver == null)
                 receiver = string.Empty;
-            var connections = Connections.Connections();
             var messageInfo = new MessageInfo(SignOptions.PublicKey, receiver, isTechnical);
             var message = new Message.Message(messageInfo, messageContent);
             MessageSigner.Sign(message);
 
-            await Task.Run(async () =>
+            connection.SendMessage(message);
+        }
+
+        public void SendMessage(string messageContent, string receiver = null, bool isTechnical = false)
+        {
+            if (MessageSigner == null || SignOptions == null || Connections == null)
+                throw new Exception("Node is not initialized!");
+
+            if (receiver == null)
+                receiver = string.Empty;
+            var messageInfo = new MessageInfo(SignOptions.PublicKey, receiver, isTechnical);
+            var message = new Message.Message(messageInfo, messageContent);
+            MessageSigner.Sign(message);
+
+            var connections = Connections.Connections();
+            Task.Run(async () =>
             {
                 List<Task> tasks = new List<Task>();
                 foreach (var connection in connections)
                     tasks.Add( Task.Run( () => connection.SendMessage(message) ) );
                 await Task.WhenAll(tasks);
-            });
+            }).Wait();
         }
 
         public bool Connect(string url)
@@ -76,7 +90,7 @@ namespace NodeNet.NodeNet
             bool result = connection.Connect(url);
             if (result == false)
                 return false;
-            var pingTask = PingPong.Ping(connection);
+            var pingTask = PingPong.Ping(connection, SignOptions.PublicKey);
             pingTask.Wait();
             if (pingTask.Result)
             {
@@ -155,6 +169,11 @@ namespace NodeNet.NodeNet
                 }
             });
             thread.Start();
+        }
+
+        public ICollection<INodeConnection>? GetNodeConnections()
+        {
+            return Connections?.Connections();
         }
 
         public int GetNodeTcpPort()

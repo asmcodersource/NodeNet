@@ -100,7 +100,7 @@ namespace NodeNet.NodeNetSession.Session
             return await SessionMessageWaiter.WaitForMessage(cancellationToken);
         }
         
-        public Task SendMessage(string data)
+        public void SendMessage(string data)
         {
             if (State != SessionState.Established)
                 throw new Exception("Session is not established for communication");
@@ -109,7 +109,7 @@ namespace NodeNet.NodeNetSession.Session
                 data
             );
             var sessionMessageJson = JsonSerializer.Serialize(sessionMessage);
-            return wrappedNode.SendMessage(data, ReceiverPublicKey);
+            wrappedNode.SendMessage(data, ReceiverPublicKey);
         }
 
         protected void ChangeState(SessionState state)

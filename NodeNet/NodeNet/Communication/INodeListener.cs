@@ -4,6 +4,7 @@
     {
         public event Action<INodeConnection> ConnectionOpened;
         public string GetConnectionAddress();
+        public void StartListening(string? tellablePublicKey = null);
         public void StartListening();
         public void StopListening();
     }

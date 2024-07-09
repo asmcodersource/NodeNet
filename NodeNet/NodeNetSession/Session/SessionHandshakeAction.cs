@@ -56,7 +56,7 @@ namespace NodeNet.NodeNetSession.Session
                 handshakeRequestJsonRaw
             );
             var sessionMessageJson = JsonSerializer.Serialize(sessionMessage);
-            await node.SendMessage(sessionMessageJson, TargetPublicKey);
+            node.SendMessage(sessionMessageJson, TargetPublicKey);
             // Receive handshake response
             var responseMsgContext = await messageWaiter.WaitForMessage(cancellationToken);
             var sessionMsgDocument = JsonDocument.Parse(responseMsgContext.Message.Data);

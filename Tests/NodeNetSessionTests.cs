@@ -41,14 +41,14 @@ namespace Tests
                     Session secondNodeSession = new Session(second_node);
                     sessionListener.NewSessionCreated += async (session) =>
                     {
-                        await session.SendMessage("Ping");
+                        session.SendMessage("Ping");
                         var pong = await session.WaitForMessage();
                     };
                     sessionListener.StartListening();
                     var success = await secondNodeSession.Connect(first_node.SignOptions.PublicKey, "socket", cancellationTokenSource.Token);
                     Assert.True(success == ConnectionResult.Connected, "Connection isn't succesful");
                     var pingMsg = await secondNodeSession.WaitForMessage(cancellationTokenSource.Token);
-                    await secondNodeSession.SendMessage("Pong");
+                    secondNodeSession.SendMessage("Pong");
                     sessionListener.Dispose();
                 }
             }

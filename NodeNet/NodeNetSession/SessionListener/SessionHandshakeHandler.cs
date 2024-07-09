@@ -66,7 +66,7 @@ namespace NodeNet.NodeNetSession.SessionListener
                    handshakeResponseJson
             );
             var sessionMessageJson = JsonSerializer.Serialize(sessionMessage);
-            await node.SendMessage(sessionMessageJson, msgContext.Message.Info.SenderPublicKey);
+            node.SendMessage(sessionMessageJson, msgContext.Message.Info.SenderPublicKey);
             return session;
         }
     }

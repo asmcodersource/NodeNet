@@ -16,7 +16,7 @@ namespace NodeNet.NodeNet.TcpCommunication
         public event Action<INodeConnection> ConnectionOpened;
         protected CancellationTokenSource cancellationTokenSource { get; set; }
 
-        public void StartListening()
+        public void StartListening(string? tellablePublicKey = null)
         {
             if (IsListening == true)
                 throw new Exception("Multiple listening");
@@ -24,8 +24,13 @@ namespace NodeNet.NodeNet.TcpCommunication
             TcpListener = new TcpListener(Options.Port);
             TcpListener.Start();
             cancellationTokenSource = new CancellationTokenSource();
-            ListeningTask = Task.Run(() => Listener());
+            ListeningTask = Task.Run(() => Listener(tellablePublicKey));
             IsListening = true;
+        }
+
+        public void StartListening()
+        {
+            StartListening(null);
         }
 
         public void StopListening()
@@ -38,7 +43,7 @@ namespace NodeNet.NodeNet.TcpCommunication
             ListeningTask.Wait();
         }
 
-        protected async Task Listener()
+        protected async Task Listener(string? tellablePublicKey = null)
         {
             try
             {
@@ -48,7 +53,7 @@ namespace NodeNet.NodeNet.TcpCommunication
                     var connection = new NodeTcpConnection(tcpConnection);
                     connection.TcpAddressProvider = this;
 
-                    PingPong.Pong(connection).ContinueWith((result) =>
+                    PingPong.Pong(connection, tellablePublicKey).ContinueWith((result) =>
                     {
                         if (result.Result)
                             ConnectionOpened?.Invoke(connection);

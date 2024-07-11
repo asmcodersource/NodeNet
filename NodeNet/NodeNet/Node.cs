@@ -12,7 +12,7 @@ namespace NodeNet.NodeNet
     public class Node : ITcpAddressProvider
     {
         public bool AutoRepeater { get; protected set; } = true;
-        public IMessageSigner? MessageSigner { get; protected set; } = null;
+        public IMessageSigner? RsaMessageSigner { get; protected set; } = null;
         public IMessageValidator? MessageValidator { get; protected set; } = null;
         public INodeListener? ConnectionsListener { get; protected set; } = null;
         public INodeConnections? Connections { get; protected set; } = null;
@@ -27,14 +27,14 @@ namespace NodeNet.NodeNet
         public static Node CreateRSAHttpNode(SenderSignOptions options, TcpListenerOptions listenerOptions)
         {
 
-            IMessageSigner messageSigner = new RsaMessageSigner();
+            IMessageSigner RsaMessageSigner = new RsaMessageSigner();
             IMessageValidator messageValidator = new RsaMessageValidator();
-            messageSigner.SetSignOptions(options);
+            RsaMessageSigner.SetSignOptions(options);
 
             Node node = new Node();
             node.SignOptions = options;
             node.MessageValidator = messageValidator;
-            node.MessageSigner = messageSigner;
+            node.RsaMessageSigner = RsaMessageSigner;
             node.Connections = new TcpConnections();
             node.NetworkExplorer = new NetworkExplorer.NetworkExplorer(node);
             node.DefaultPipelineInitialize();
@@ -51,28 +51,28 @@ namespace NodeNet.NodeNet
 
         public void SendMessage(string messageContent, INodeConnection connection, string? receiver = null,  bool isTechnical = false)
         {
-            if (MessageSigner == null || SignOptions == null || Connections == null)
+            if (RsaMessageSigner == null || SignOptions == null || Connections == null)
                 throw new Exception("Node is not initialized!");
 
             if (receiver == null)
                 receiver = string.Empty;
             var messageInfo = new MessageInfo(SignOptions.PublicKey, receiver, isTechnical);
             var message = new Message.Message(messageInfo, messageContent);
-            MessageSigner.Sign(message);
+            RsaMessageSigner.Sign(message);
 
             connection.SendMessage(message);
         }
 
         public void SendMessage(string messageContent, string receiver = null, bool isTechnical = false)
         {
-            if (MessageSigner == null || SignOptions == null || Connections == null)
+            if (RsaMessageSigner == null || SignOptions == null || Connections == null)
                 throw new Exception("Node is not initialized!");
 
             if (receiver == null)
                 receiver = string.Empty;
             var messageInfo = new MessageInfo(SignOptions.PublicKey, receiver, isTechnical);
             var message = new Message.Message(messageInfo, messageContent);
-            MessageSigner.Sign(message);
+            RsaMessageSigner.Sign(message);
 
             var connections = Connections.Connections();
             Task.Run(async () =>

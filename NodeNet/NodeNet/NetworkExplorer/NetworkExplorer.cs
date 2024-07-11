@@ -34,7 +34,7 @@ namespace NodeNet.NodeNet.NetworkExplorer
 
         public void SendExploreEcho()
         {
-            if (Node.MessageSigner == null || Node.SignOptions == null || Node.Connections == null)
+            if (Node.RsaMessageSigner == null || Node.SignOptions == null || Node.Connections == null)
                 throw new Exception("Node is not initialized!");
 
             var connections = Node.Connections.Connections();
@@ -45,7 +45,7 @@ namespace NodeNet.NodeNet.NetworkExplorer
                 string jsonObject = JsonConvert.SerializeObject(echoRequest);
                 var messageInfo = new MessageInfo(Node.SignOptions.PublicKey, string.Empty, true);
                 var message = new Message.Message(messageInfo, jsonObject);
-                Node.MessageSigner.Sign(message);
+                Node.RsaMessageSigner.Sign(message);
                 connection.SendMessage(message);
             }
         }

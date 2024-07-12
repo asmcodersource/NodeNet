@@ -14,7 +14,7 @@ namespace NodeNet.NodeNet.TcpCommunication
         public bool IsListening { get; set; } = false;
         public TcpClient TcpClient { get; protected set; }
         public ITcpAddressProvider TcpAddressProvider { get; set; }
-        public string? OppsiteSidePublicKey { get; set; } = null;
+        public string? OppositeSidePublicKey { get; set; } = null;
 
         public event Action<INodeConnection> MessageReceived;
         public event Action<INodeConnection> ConnectionClosed;

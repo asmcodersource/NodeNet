@@ -5,7 +5,7 @@
         public event Action<INodeConnection> MessageReceived;
         public event Action<INodeConnection> ConnectionClosed;
 
-        public string? OppsiteSidePublicKey { get; set; }
+        public string? OppositeSidePublicKey { get; set; }
         public bool Connect(string addr);
         public void CloseConnection();
         public void ListenMessages();

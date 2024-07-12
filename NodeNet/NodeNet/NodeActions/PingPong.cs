@@ -44,7 +44,7 @@ namespace NodeNet.NodeNet.NodeActions
                 var pongResponseJson = Encoding.UTF8.GetString(pongResponseBytes, 0, pongResponseBytes.Length);
                 var pongResponse = JsonSerializer.Deserialize<PongResponse>(pongResponseJson);
                 if (IsPublicKeyConfirmed(pongResponse, requestedRandomNumber, requestTime))
-                    connection.OppsiteSidePublicKey = pongResponse.MyPublicKey;
+                    connection.OppositeSidePublicKey = pongResponse.MyPublicKey;
 
                 var randomNumber = Convert.ToInt64(Encoding.UTF8.GetString(await connection.ReceiveRawData(cancellationTokenSource.Token)));
                 var pingRequest = new PingRequest()
@@ -86,7 +86,7 @@ namespace NodeNet.NodeNet.NodeActions
                 var pingRequestString = Encoding.UTF8.GetString(pingRequestBytes, 0, pingRequestBytes.Length);
                 var pingRequest = JsonSerializer.Deserialize<PingRequest>(pingRequestString);
                 if (IsPublicKeyConfirmed(pingRequest, requestedRandomNumber, requestTime))
-                    connection.OppsiteSidePublicKey = pingRequest.MyPublicKey;
+                    connection.OppositeSidePublicKey = pingRequest.MyPublicKey;
                 return true;
             }
             catch (Exception ex) { }

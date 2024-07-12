@@ -19,8 +19,7 @@ namespace NodeNet.NodeNetSession.SessionPredicates
 
         static private bool Method(MessageContext messageContext, string targetSession)
         {
-            var sessionMsgJsonDocument = JsonDocument.Parse(messageContext.Message.Data);
-            var sessionMsg = sessionMsgJsonDocument.Deserialize<SessionMessage.SessionMessage>();
+            var sessionMsg = JsonSerializer.Deserialize<SessionMessage.SessionMessage>(messageContext.Message.Data);
             if (sessionMsg is null)
                 return false;
             if (sessionMsg.Info.OppositeSessionId == targetSession)

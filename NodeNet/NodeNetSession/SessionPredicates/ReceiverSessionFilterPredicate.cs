@@ -22,9 +22,7 @@ namespace NodeNet.NodeNetSession.SessionPredicates
             var sessionMsg = JsonSerializer.Deserialize<SessionMessage.SessionMessage>(messageContext.Message.Data);
             if (sessionMsg is null)
                 return false;
-            if (sessionMsg.Info.OppositeSessionId == targetSession)
-                return false;
-            return true;
+            return sessionMsg.Info.OppositeSessionId == targetSession;
         }
     }
 }

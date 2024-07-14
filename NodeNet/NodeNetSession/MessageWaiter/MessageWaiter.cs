@@ -92,10 +92,10 @@ namespace NodeNet.NodeNetSession.MessageWaiter
                 if (IsAllowListening is not true)
                     return;
                 AddMessageToQueue(messageContext);
-                if ( currentWaitingTasks.Count > 0)
+                if (currentWaitingTasks.Count > 0 && messageQueue.Count > 0)
                 {
                     var firstWaitingTask = currentWaitingTasks.Dequeue();
-                    firstWaitingTask.SetResult(messageContext);
+                    firstWaitingTask.SetResult(messageQueue.Dequeue());
                 }
             }
         }

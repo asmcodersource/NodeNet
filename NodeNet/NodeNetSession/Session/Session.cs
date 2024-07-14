@@ -38,6 +38,7 @@ namespace NodeNet.NodeNetSession.Session
         {
             this.wrappedNode = wrappedNode;
             OppositeSessionId = oppositeSessionId;
+            ReceiverPublicKey = receiverPublicKey;
             Resource = resource;
             SessionMessageWaiter = new MessageWaiter.MessageWaiter(wrappedNode);
             SessionMessageWaiter.MessageFilterPredicate = MessageFilterAndPredicate.And(

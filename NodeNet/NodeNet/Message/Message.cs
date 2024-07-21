@@ -8,7 +8,7 @@
         public MessageInfo Info { get; protected set; }
         public string Data { get; protected set; } = "";
         public string MessageSign { get; protected set; } = "";
-        public int TimeToLive { get; protected set; } = 128;
+        public int TimeToLive { get; set; } = 128;
 
         public Message(MessageInfo info, string data, string messageSign = "")
         {

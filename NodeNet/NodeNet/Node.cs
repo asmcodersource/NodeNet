@@ -63,7 +63,7 @@ namespace NodeNet.NodeNet
             connection.SendMessage(message);
         }
 
-        public void SendMessage(string messageContent, string receiver = null, bool isTechnical = false)
+        public void SendMessage(string messageContent, string receiver = null, bool isTechnical = false, int TTL = 128)
         {
             if (RsaMessageSigner == null || SignOptions == null || Connections == null)
                 throw new Exception("Node is not initialized!");
@@ -72,6 +72,7 @@ namespace NodeNet.NodeNet
                 receiver = string.Empty;
             var messageInfo = new MessageInfo(SignOptions.PublicKey, receiver, isTechnical);
             var message = new Message.Message(messageInfo, messageContent);
+            message.TimeToLive = TTL;
             RsaMessageSigner.Sign(message);
 
             var connections = Connections.Connections();
@@ -157,9 +158,10 @@ namespace NodeNet.NodeNet
                         PersonalMessageReceived?.Invoke(msgContext);
                         Serilog.Log.Debug($"NodeNet node localhost:{GetNodeTcpPort()} | Personal message received");
                     }
-                    if (AutoRepeater is true)
+                    if (AutoRepeater is true && message.TimeToLive > 0)
                     {
                         var connections = Connections.Connections();
+                        message.TimeToLive = message.TimeToLive - 1;
                         foreach (var connection in connections)
                             connection.SendMessage(message);
                     }

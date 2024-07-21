@@ -156,7 +156,7 @@ namespace NodeNet.NodeNet
                     if (msgContext.Message.Info.ReceiverPublicKey == SignOptions.PublicKey)
                     {
                         PersonalMessageReceived?.Invoke(msgContext);
-                        Serilog.Log.Debug($"NodeNet node localhost:{GetNodeTcpPort()} | Personal message received");
+                        Serilog.Log.Verbose($"NodeNet node localhost:{GetNodeTcpPort()} | Personal message received");
                     }
                     if (AutoRepeater is true && message.TimeToLive > 0)
                     {

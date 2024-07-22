@@ -2,6 +2,7 @@
 {
     public interface INodeSender
     {
-        public void SendMessage(NodeNet.Message.Message message);
+        public Task SendMessage(ArraySegment<byte> segment);
+        public Task SendMessage(NodeNet.Message.Message message);
     }
 }

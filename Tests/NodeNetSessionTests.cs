@@ -18,7 +18,7 @@ namespace Tests
                 Node second_node = connections.second_node;
 
                 CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-                cancellationTokenSource.CancelAfter(5000);
+                //cancellationTokenSource.CancelAfter(5000);
                 SessionListener sessionListener = new SessionListener(first_node, "socket");
                 Session secondNodeSession = new Session(second_node);
                 sessionListener.StartListening();
@@ -43,14 +43,14 @@ namespace Tests
                     Session secondNodeSession = new Session(second_node);
                     sessionListener.NewSessionCreated += async (session) =>
                     {
-                        session.SendMessage("Ping");
+                        await session.SendMessageAsync("Ping");
                         var pong = await session.WaitForMessage();
                     };
                     sessionListener.StartListening();
                     var success = await secondNodeSession.Connect(first_node.SignOptions.PublicKey, "socket", cancellationTokenSource.Token);
                     Assert.True(success == ConnectionResult.Connected, "Connection isn't succesful");
                     var pingMsg = await secondNodeSession.WaitForMessage(cancellationTokenSource.Token);
-                    secondNodeSession.SendMessage("Pong");
+                    await secondNodeSession.SendMessageAsync("Pong");
                     sessionListener.Dispose();
                 }
             }
@@ -68,10 +68,10 @@ namespace Tests
                     //cancellationTokenSource.CancelAfter(5000);
                     SessionListener sessionListener = new SessionListener(first_node, "socket");
                     Session secondNodeSession = new Session(second_node);
-                    sessionListener.NewSessionCreated += (session) =>
+                    sessionListener.NewSessionCreated += async (session) =>
                     {
                         for (int i = 1; i <= 10; i++)
-                            session.SendMessage(i.ToString());
+                            await session.SendMessageAsync(i.ToString());
                     };
                     sessionListener.StartListening();
                     var success = await secondNodeSession.Connect(first_node.SignOptions.PublicKey, "socket", cancellationTokenSource.Token);
@@ -80,8 +80,7 @@ namespace Tests
                     for (int i = 1; i <= 10; i++)
                     {
                         var msgContext = await secondNodeSession.WaitForMessage(cancellationTokenSource.Token);
-                        var sessionMsg = JsonSerializer.Deserialize<SessionMessage>(msgContext.Message.Data);
-                        sum += Convert.ToInt32(sessionMsg.Data);
+                        sum += Convert.ToInt32(msgContext.SessionMessage.Data);
                     }
                     Assert.Equal((1 + 10) * 10 / 2, sum);
                     sessionListener.Dispose();

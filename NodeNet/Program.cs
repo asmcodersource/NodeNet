@@ -16,8 +16,8 @@ node1.NetworkExplorer.SendExploreEcho();
 new Thread(() => {
     for( int i = 0; i < 10; i++ ) 
     {
-        node2.SendMessage("Message1");
-        node1.SendMessage("Message2");
+        node2.SendMessageAsync("Message1");
+        node1.SendMessageAsync("Message2");
         Thread.Sleep(500);
     }
     node2.Close();

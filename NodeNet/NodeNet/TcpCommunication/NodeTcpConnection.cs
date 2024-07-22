@@ -67,7 +67,13 @@ namespace NodeNet.NodeNet.TcpCommunication
             ListeningThread.Start();
         }
 
-        public void SendMessage(NodeNet.Message.Message message)
+        public async Task SendMessage(ArraySegment<byte> segment)
+        {
+            var stream = TcpClient.GetStream();
+            await stream.WriteAsync(segment);
+        }
+
+        public async Task SendMessage(NodeNet.Message.Message message)
         {
             // Serialization can be performed in parallel, so lock is not needed here.
             var jsonMessage = JsonConvert.SerializeObject(message);
@@ -75,11 +81,10 @@ namespace NodeNet.NodeNet.TcpCommunication
             var stream = TcpClient.GetStream();
 
             // Only one execution thread can write to a data stream at a time, otherwise it is impossible to interpret the data correctly.
-            lock(this)
-                stream.Write(segment);
+            await stream.WriteAsync(segment);
         }
 
-        public async Task SendRawData(byte[] data, CancellationToken cancellationToken)
+        public async Task SendRawDataAsync(byte[] data, CancellationToken cancellationToken)
         {
             await TcpClient.GetStream().WriteAsync(data, cancellationToken);
         }

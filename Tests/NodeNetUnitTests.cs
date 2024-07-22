@@ -8,10 +8,9 @@ namespace Tests
 {
     public class NodeNetUnitTests
     {
-        static object wallLock = new object();
 
         [Fact]
-        public void NodeNet_Communications_Messaging_SingleMessage_Test()
+        public async void NodeNet_Communications_Messaging_SingleMessage_Test()
         {
             using (var connections = new NodeNetConnectionPair())
             {
@@ -31,8 +30,8 @@ namespace Tests
                     Assert.True(msgContext.Message.Data == message);
                 };
 
-                first_node.SendMessage(message);
-                second_node.SendMessage(message);
+                await first_node.SendMessageAsync(message);
+                await second_node.SendMessageAsync(message);
 
                 Thread.Sleep(50);
 
@@ -42,7 +41,7 @@ namespace Tests
 
 
         [Fact]
-        public void NodeNet_Communications_Messaging_MultipleMessage_Test()
+        public async void NodeNet_Communications_Messaging_MultipleMessage_Test()
         {
             using (var connections = new NodeNetConnectionPair())
             {
@@ -56,8 +55,8 @@ namespace Tests
                 for (int i = 0; i < 1024; i++)
                 {
                     sending_summary += i;
-                    first_node.SendMessage(i.ToString());
-                    second_node.SendMessage((1023-i).ToString());
+                    await first_node.SendMessageAsync(i.ToString());
+                    await second_node.SendMessageAsync((1023-i).ToString());
                 }
 
                 Thread.Sleep(150);
@@ -109,8 +108,8 @@ namespace Tests
                         receivedMessagesCount |= 2;
             };
 
-            first_node.SendMessage(message, second_node.SignOptions.PublicKey);
-            second_node.SendMessage(message, first_node.SignOptions.PublicKey);
+            await first_node.SendMessageAsync(message, second_node.SignOptions.PublicKey);
+            await second_node.SendMessageAsync(message, first_node.SignOptions.PublicKey);
             await Task.Delay(4000);
             Assert.Equal(3, receivedMessagesCount);
         }

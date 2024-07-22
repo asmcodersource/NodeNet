@@ -11,7 +11,7 @@
         public void ListenMessages();
         public string GetConnectionAddress();
         public Task<byte[]> ReceiveRawData(CancellationToken cancellationToken);
-        public Task SendRawData(byte[] data, CancellationToken cancellationToken);
+        public Task SendRawDataAsync(byte[] data, CancellationToken cancellationToken);
 
     }
 }

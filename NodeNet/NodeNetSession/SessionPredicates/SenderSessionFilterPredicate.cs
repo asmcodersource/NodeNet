@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace NodeNet.NodeNetSession.SessionPredicates
 {
-    public class ReceiverSessionFilterPredicate
+    public class SenderSessionFilterPredicate
     {
         static public MessageFilterPredicate CreateFilter(string targetSession)
         {
@@ -19,7 +19,7 @@ namespace NodeNet.NodeNetSession.SessionPredicates
 
         static private bool Method(SessionMessage.SessionMessage sessionMessage, string targetSession)
         {
-            return sessionMessage.Info.OppositeSessionId == targetSession;
+            return sessionMessage.Info.SenderSessionId == targetSession;
         }
     }
 }

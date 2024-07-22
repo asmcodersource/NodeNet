@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using NodeNet.NodeNet;
 using Serilog.Core;
 using System.Collections;
+using NodeNet.NodeNetSession.SessionMessage;
+using System.Text.Json;
 
 namespace NodeNet.NodeNetSession.MessageWaiter
 {
@@ -16,9 +18,9 @@ namespace NodeNet.NodeNetSession.MessageWaiter
         public MessageFilterPredicate MessageFilterPredicate { get; set; } = (msgContext) => true;
         public bool IsAllowListening { get; set; } = false;
 
-        private Queue<TaskCompletionSource<MessageContext>> currentWaitingTasks = new Queue<TaskCompletionSource<MessageContext>>();
+        private Queue<TaskCompletionSource<SessionMessageContext>> currentWaitingTasks = new Queue<TaskCompletionSource<SessionMessageContext>>();
         private readonly Node? listeningNode = null;
-        private readonly Queue<MessageContext> messageQueue = new Queue<MessageContext>();
+        private readonly Queue<SessionMessageContext> messageQueue = new Queue<SessionMessageContext>();
 
         /// <summary>
         /// Creates queue without linked node
@@ -39,7 +41,7 @@ namespace NodeNet.NodeNetSession.MessageWaiter
             }
         }
 
-        public void AddMessageToQueueManually(MessageContext messageContext)
+        public void AddMessageToQueueManually(SessionMessageContext messageContext)
         {
             lock (this.messageQueue)
             {
@@ -47,12 +49,12 @@ namespace NodeNet.NodeNetSession.MessageWaiter
             }
         }
 
-        public void CancelWaitForMessage(TaskCompletionSource<MessageContext> targetTaskCTS)
+        public void CancelWaitForMessage(TaskCompletionSource<SessionMessageContext> targetTaskCTS)
         {
             lock (this.messageQueue)
             {
                 // Filtering waiting task, to exclude cancelled one
-                currentWaitingTasks = new Queue<TaskCompletionSource<MessageContext>>(
+                currentWaitingTasks = new Queue<TaskCompletionSource<SessionMessageContext>>(
                     currentWaitingTasks.Except(new[] { targetTaskCTS })
                 );
                 // Set waiting task to canceled state
@@ -60,14 +62,14 @@ namespace NodeNet.NodeNetSession.MessageWaiter
             }
         }
 
-        public async Task<MessageContext> WaitForMessage()
+        public async Task<SessionMessageContext> WaitForMessage()
         {
             return await WaitForMessage(CancellationToken.None);
         }
 
-        public Task<MessageContext> WaitForMessage(CancellationToken cancellationToken)
+        public Task<SessionMessageContext> WaitForMessage(CancellationToken cancellationToken)
         {
-            var completeSource = new TaskCompletionSource<MessageContext>();
+            var completeSource = new TaskCompletionSource<SessionMessageContext>();
             lock (this.messageQueue)
             {
                 if( this.messageQueue.Count > 0 )
@@ -87,11 +89,17 @@ namespace NodeNet.NodeNetSession.MessageWaiter
 
         public void MessageReceivedHandler(MessageContext messageContext)
         {
+            SessionMessage.SessionMessage? sessionMsg = null;
+            try
+            {
+                sessionMsg = JsonSerializer.Deserialize<SessionMessage.SessionMessage>(messageContext.Message.Data);
+            } catch { }
+            var sessionMsgContext = new SessionMessageContext(messageContext, sessionMsg);
             lock (this.messageQueue)
             {
                 if (IsAllowListening is not true)
                     return;
-                AddMessageToQueue(messageContext);
+                AddMessageToQueue(sessionMsgContext);
                 if (currentWaitingTasks.Count > 0 && messageQueue.Count > 0)
                 {
                     var firstWaitingTask = currentWaitingTasks.Dequeue();
@@ -100,7 +108,7 @@ namespace NodeNet.NodeNetSession.MessageWaiter
             }
         }
 
-        protected void AddMessageToQueue(MessageContext messageContext)
+        protected void AddMessageToQueue(SessionMessageContext messageContext)
         {
             // Tt will be possible to immediately filter out messages that are not needed in a given queue;
             // one of the disadvantages is that a larger number of such checks will negatively affect performance.

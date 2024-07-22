@@ -56,13 +56,11 @@ namespace NodeNet.NodeNetSession.Session
                 handshakeRequestJsonRaw
             );
             var sessionMessageJson = JsonSerializer.Serialize(sessionMessage);
-            node.SendMessage(sessionMessageJson, TargetPublicKey);
+            await node.SendMessageAsync(sessionMessageJson, TargetPublicKey);
             // Receive handshake response
-            var responseMsgContext = await messageWaiter.WaitForMessage(cancellationToken);
-            var sessionMsgDocument = JsonDocument.Parse(responseMsgContext.Message.Data);
-            var sessionMsg = sessionMsgDocument.Deserialize<SessionMessage.SessionMessage>();
+            var sessionMessageContext = await messageWaiter.WaitForMessage(cancellationToken);
             messageWaiter.IsAllowListening = false;
-            return sessionMsg.Info.SenderSessionId;
+            return sessionMessageContext.SessionMessage.Info.SenderSessionId;
         }
     }
 }

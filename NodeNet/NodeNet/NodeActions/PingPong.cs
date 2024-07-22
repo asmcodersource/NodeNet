@@ -38,7 +38,7 @@ namespace NodeNet.NodeNet.NodeActions
                 
                 var requestTime = DateTime.UtcNow;
                 var requestedRandomNumber = Random.Shared.NextInt64();
-                await connection.SendRawData(Encoding.UTF8.GetBytes(requestedRandomNumber.ToString()), cancellationTokenSource.Token);
+                await connection.SendRawDataAsync(Encoding.UTF8.GetBytes(requestedRandomNumber.ToString()), cancellationTokenSource.Token);
                 
                 var pongResponseBytes = await connection.ReceiveRawData(cancellationTokenSource.Token);
                 var pongResponseJson = Encoding.UTF8.GetString(pongResponseBytes, 0, pongResponseBytes.Length);
@@ -55,7 +55,7 @@ namespace NodeNet.NodeNet.NodeActions
                 };
                 SignPingPongData(pingRequest, senderSignOptions);
                 var pingRequestJson = JsonSerializer.Serialize(pingRequest);
-                await connection.SendRawData(Encoding.UTF8.GetBytes(pingRequestJson), cancellationTokenSource.Token);
+                await connection.SendRawDataAsync(Encoding.UTF8.GetBytes(pingRequestJson), cancellationTokenSource.Token);
                 return true;
             }
             catch (Exception ex) { }
@@ -77,11 +77,11 @@ namespace NodeNet.NodeNet.NodeActions
                 };
                 SignPingPongData(pongResponse, senderSignOptions);
                 var pongResponseJson = JsonSerializer.Serialize(pongResponse);
-                await connection.SendRawData(Encoding.UTF8.GetBytes(pongResponseJson), cancellationTokenSource.Token);
+                await connection.SendRawDataAsync(Encoding.UTF8.GetBytes(pongResponseJson), cancellationTokenSource.Token);
 
                 var requestTime = DateTime.UtcNow;
                 var requestedRandomNumber = Random.Shared.NextInt64();
-                await connection.SendRawData(Encoding.UTF8.GetBytes(requestedRandomNumber.ToString()), cancellationTokenSource.Token);
+                await connection.SendRawDataAsync(Encoding.UTF8.GetBytes(requestedRandomNumber.ToString()), cancellationTokenSource.Token);
                 var pingRequestBytes = await connection.ReceiveRawData(cancellationTokenSource.Token);
                 var pingRequestString = Encoding.UTF8.GetString(pingRequestBytes, 0, pingRequestBytes.Length);
                 var pingRequest = JsonSerializer.Deserialize<PingRequest>(pingRequestString);

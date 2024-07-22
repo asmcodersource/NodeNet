@@ -4,6 +4,7 @@ using NodeNet.NodeNet.Message;
 using NodeNet.NodeNetSession.MessageWaiter;
 using NodeNet.NodeNetSession.SessionPredicates;
 using System.Text.Json;
+using NodeNet.NodeNetSession.SessionMessage;
 
 namespace NodeNet.NodeNetSession.Session
 {
@@ -17,10 +18,10 @@ namespace NodeNet.NodeNetSession.Session
         public SessionState State { get; protected set; } = SessionState.Created;
         public MessageWaiter.MessageWaiter SessionMessageWaiter { get; protected set; } = new MessageWaiter.MessageWaiter();
 
-        private readonly Node wrappedNode;
+        private readonly Node? wrappedNode = null;
 
 
-        public Session()
+        private Session()
         {
             CurrentSessionId = GetHashCode().ToString();
         }
@@ -44,7 +45,7 @@ namespace NodeNet.NodeNetSession.Session
             SessionMessageWaiter.MessageFilterPredicate = MessageFilterAndPredicate.And(
                 MessageSenderFilterPredicate.CreateFilter(receiverPublicKey),
                 MessageReceiverFilterPredicate.CreateFilter(wrappedNode.SignOptions.PublicKey),
-                ReceiverSessionFilterPredicate.CreateFilter(CurrentSessionId)
+                SenderSessionFilterPredicate.CreateFilter(CurrentSessionId)
             );
             SessionMessageWaiter.IsAllowListening = true;
             ChangeState(SessionState.Established);
@@ -74,7 +75,8 @@ namespace NodeNet.NodeNetSession.Session
                 SessionMessageWaiter.MessageFilterPredicate = MessageFilterAndPredicate.And(
                     MessageSenderFilterPredicate.CreateFilter(receiverPublicKey),
                     MessageReceiverFilterPredicate.CreateFilter(wrappedNode.SignOptions.PublicKey),
-                    ReceiverSessionFilterPredicate.CreateFilter(CurrentSessionId)
+                    ReceiverSessionFilterPredicate.CreateFilter(CurrentSessionId),
+                    SenderSessionFilterPredicate.CreateFilter(OppositeSessionId)
                 );
                 SessionMessageWaiter.IsAllowListening = true;
                 ChangeState(SessionState.Established);
@@ -87,19 +89,19 @@ namespace NodeNet.NodeNetSession.Session
         }
 
 
-        public async Task<MessageContext?> WaitForMessage()
+        public async Task<SessionMessageContext> WaitForMessage()
         {
             return await SessionMessageWaiter.WaitForMessage(CancellationToken.None);
         }
 
-        public async Task<MessageContext?> WaitForMessage(CancellationToken cancellationToken)
+        public async Task<SessionMessageContext> WaitForMessage(CancellationToken cancellationToken)
         {
             if (State != SessionState.Established)
                 throw new Exception("Session is not established for communication");
             return await SessionMessageWaiter.WaitForMessage(cancellationToken);
         }
         
-        public void SendMessage(string data)
+        public async Task SendMessageAsync(string data)
         {
             if (State != SessionState.Established)
                 throw new Exception("Session is not established for communication");
@@ -108,7 +110,7 @@ namespace NodeNet.NodeNetSession.Session
                 data
             );
             var sessionMessageJson = JsonSerializer.Serialize(sessionMessage);
-            wrappedNode.SendMessage(sessionMessageJson, ReceiverPublicKey);
+            await wrappedNode.SendMessageAsync(sessionMessageJson, ReceiverPublicKey);
         }
 
         protected void ChangeState(SessionState state)

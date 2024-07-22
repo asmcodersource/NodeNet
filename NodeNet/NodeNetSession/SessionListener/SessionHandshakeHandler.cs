@@ -49,24 +49,28 @@ namespace NodeNet.NodeNetSession.SessionListener
         public async Task<Session.Session> HandleNextRequest(CancellationToken cancellationToken)
         {
             // Wait for handshake request, and accept it
-            var msgContext = await messageWaiter.WaitForMessage(cancellationToken);
-            var sessionMsgDocument = JsonDocument.Parse(msgContext.Message.Data);
-            var sessionMsg = sessionMsgDocument.Deserialize<SessionMessage.SessionMessage>();
-            var sessionMsgDataDocument = JsonDocument.Parse(sessionMsg!.Data);
-            var handshakeRequest = sessionMsgDataDocument.Deserialize<HandshakeRequest>();
+            var sessionMsgContext = await messageWaiter.WaitForMessage(cancellationToken);
+            if (sessionMsgContext.SessionMessage is null)
+                throw new OperationCanceledException();
+            var handshakeRequest = JsonSerializer.Deserialize<HandshakeRequest>(sessionMsgContext.SessionMessage.Data);
             if( handshakeRequest is null )
                 throw new OperationCanceledException();
             if (handshakeRequest.Resource != ListeningResource)
                 throw new OperationCanceledException();
             // Handshake accepted
-            var session = new Session.Session(node, msgContext.Message.Info.SenderPublicKey, sessionMsg.Info.SenderSessionId, ListeningResource);
+            var session = new Session.Session(
+                node, 
+                sessionMsgContext.MessageContext.Message.Info.SenderPublicKey, 
+                sessionMsgContext.SessionMessage.Info.SenderSessionId, 
+                ListeningResource
+            );
             var handshakeResponseJson = JsonSerializer.Serialize(new HandshakeResponse());
             var sessionMessage = new SessionMessage.SessionMessage(
                    new SessionMessage.SessionMessageInfo(session.OppositeSessionId, session.CurrentSessionId),
                    handshakeResponseJson
             );
             var sessionMessageJson = JsonSerializer.Serialize(sessionMessage);
-            node.SendMessage(sessionMessageJson, msgContext.Message.Info.SenderPublicKey);
+            await node.SendMessageAsync(sessionMessageJson, sessionMsgContext.MessageContext.Message.Info.SenderPublicKey);
             return session;
         }
     }

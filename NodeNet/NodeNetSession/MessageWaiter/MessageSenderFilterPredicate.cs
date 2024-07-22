@@ -11,7 +11,7 @@ namespace NodeNet.NodeNetSession.MessageWaiter
     {
         static public MessageFilterPredicate CreateFilter(string senderPublicKey)
         {
-            return (messageContext) => MessageSenderFilterPredicate.Method(messageContext, senderPublicKey);
+            return (messageContext) => MessageSenderFilterPredicate.Method(messageContext.MessageContext, senderPublicKey);
         }
 
         static private bool Method(MessageContext messageContext, string senderPublicKey)

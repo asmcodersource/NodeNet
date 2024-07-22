@@ -5,7 +5,8 @@ using NodeNet.NodeNet.ReceiveMiddleware;
 using NodeNet.NodeNet.TcpCommunication;
 using NodeNet.NodeNet.RSAEncryptions;
 using NodeNet.NodeNet.SignOptions;
-using System;
+using System.Text;
+using Newtonsoft.Json;
 
 namespace NodeNet.NodeNet
 {
@@ -49,7 +50,7 @@ namespace NodeNet.NodeNet
             return node;
         }
 
-        public void SendMessage(string messageContent, INodeConnection connection, string? receiver = null,  bool isTechnical = false)
+        public async Task SendMessageAsync(string messageContent, INodeConnection connection, string? receiver = null,  bool isTechnical = false)
         {
             if (RsaMessageSigner == null || SignOptions == null || Connections == null)
                 throw new Exception("Node is not initialized!");
@@ -60,10 +61,10 @@ namespace NodeNet.NodeNet
             var message = new Message.Message(messageInfo, messageContent);
             RsaMessageSigner.Sign(message);
 
-            connection.SendMessage(message);
+            await connection.SendMessage(message);
         }
 
-        public void SendMessage(string messageContent, string receiver = null, bool isTechnical = false, int TTL = 128)
+        public async Task SendMessageAsync(string messageContent, string receiver = null, bool isTechnical = false, int TTL = 128)
         {
             if (RsaMessageSigner == null || SignOptions == null || Connections == null)
                 throw new Exception("Node is not initialized!");
@@ -76,13 +77,12 @@ namespace NodeNet.NodeNet
             RsaMessageSigner.Sign(message);
 
             var connections = Connections.Connections();
-            Task.Run(async () =>
-            {
-                List<Task> tasks = new List<Task>();
-                foreach (var connection in connections)
-                    tasks.Add( Task.Run( () => connection.SendMessage(message) ) );
-                await Task.WhenAll(tasks);
-            }).Wait();
+            var jsonMessage = JsonConvert.SerializeObject(message);
+            var segment = new ArraySegment<byte>(Encoding.UTF8.GetBytes(jsonMessage));
+            List<Task> tasks = new List<Task>();
+            foreach (var connection in connections)
+                tasks.Add(connection.SendMessage(segment));
+            await Task.WhenAll(tasks);
         }
 
         public bool Connect(string url)

@@ -15,14 +15,14 @@ namespace NodeNet.NodeNetSession.MessageWaiter
     {
         static public MessageFilterPredicate CreateFilter()
         {
-            return MessageWhenDataIsPredicate<T>.Method;
+            return (msgContext) => MessageWhenDataIsPredicate<T>.Method(msgContext.SessionMessage);
         }
 
-        static private bool Method(MessageContext messageContext)
+        static private bool Method(SessionMessage.SessionMessage messageContext)
         {
             try
             {
-                var jsonDocument = JsonDocument.Parse(messageContext.Message.Data);
+                var jsonDocument = JsonDocument.Parse(messageContext.Data);
                 var parsedObject = jsonDocument.Deserialize<T>();
                 return parsedObject is not null;
             }

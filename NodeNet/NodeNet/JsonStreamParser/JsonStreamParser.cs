@@ -15,7 +15,7 @@ namespace NodeNet.NodeNet.JsonStreamParser
         protected Queue<JsonDocument> objectsQueue = new Queue<JsonDocument>();
         protected StringBuilder dataBuffer = new StringBuilder();
 
-        public JsonStreamParser(int bufferSize = 1024 * 32)
+        public JsonStreamParser(int bufferSize = 1024 * 1024)
         {
             // bigger array faster parsing, but more space complexity
             readBuffer = new char[bufferSize];
@@ -45,7 +45,7 @@ namespace NodeNet.NodeNet.JsonStreamParser
             {
                 var receivedSize = await reader.ReadAsync(readBuffer, cancellationToken);
                 if (receivedSize == 0)
-                    await Task.Delay(100);
+                    await Task.Delay(0);
                 ParsePart(readBuffer, receivedSize);
                 if (objectsQueue.Count() != 0)
                     break;

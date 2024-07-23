@@ -43,10 +43,11 @@ namespace NodeNet.NodeNetSession.Session
             Resource = resource;
             SessionMessageWaiter = new MessageWaiter.MessageWaiter(wrappedNode);
             SessionMessageWaiter.MessageFilterPredicate = MessageFilterAndPredicate.And(
-                MessageSenderFilterPredicate.CreateFilter(receiverPublicKey),
-                MessageReceiverFilterPredicate.CreateFilter(wrappedNode.SignOptions.PublicKey),
-                SenderSessionFilterPredicate.CreateFilter(CurrentSessionId)
-            );
+                    MessageSenderFilterPredicate.CreateFilter(receiverPublicKey),
+                    MessageReceiverFilterPredicate.CreateFilter(wrappedNode.SignOptions.PublicKey),
+                    ReceiverSessionFilterPredicate.CreateFilter(CurrentSessionId),
+                    SenderSessionFilterPredicate.CreateFilter(OppositeSessionId)
+                );
             SessionMessageWaiter.IsAllowListening = true;
             ChangeState(SessionState.Established);
         }

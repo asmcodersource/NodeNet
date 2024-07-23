@@ -91,7 +91,7 @@ namespace NodeNet.NodeNet.TcpCommunication
 
         public async Task<byte[]> ReceiveRawData(CancellationToken cancellationToken)
         {
-            ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[1024 * 16]);
+            ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[1024 * 1024]);
             try
             {
                 var size = await TcpClient.GetStream().ReadAsync(buffer, cancellationToken);

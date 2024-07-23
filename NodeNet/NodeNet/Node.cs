@@ -124,7 +124,7 @@ namespace NodeNet.NodeNet
             MiddlewarePipeline = new MiddlewarePipeline();
             MiddlewarePipeline.AddHandler(signMiddleware);
             MiddlewarePipeline.AddHandler(cacheMiddleware);
-            MiddlewarePipeline.AddHandler(floodProtectorMiddleware);
+            //MiddlewarePipeline.AddHandler(floodProtectorMiddleware);
             MiddlewarePipeline.AddHandler(NetworkExplorer.Middleware);
             MiddlewarePipeline.AddHandler(successTerminator);
         }
@@ -133,16 +133,16 @@ namespace NodeNet.NodeNet
         {
             Connections.AddConnection(nodeConnection);
             nodeConnection.ConnectionClosed += Connections.RemoveConnection;
-            nodeConnection.MessageReceived += NewMessageHandler;
+            nodeConnection.MessageReceived += async (connection) => await NewMessageHandler(connection);
             nodeConnection.ListenMessages();
             NetworkExplorer.UpdateConnectionInfo(nodeConnection);
         }
 
-        protected async void NewMessageHandler(INodeConnection nodeConnection)
+        protected async Task NewMessageHandler(INodeConnection nodeConnection)
         {
-            var thread = new Thread(() =>
+            var message = nodeConnection.GetLastMessage();
+            Task.Run(() =>
             {
-                var message = nodeConnection.GetLastMessage();
                 if (message == null)
                     return;
                 var msgContext = new MessageContext(message, nodeConnection);
@@ -151,13 +151,6 @@ namespace NodeNet.NodeNet
                 var msgPassMiddleware = MiddlewarePipeline.Handle(msgContext);
                 if (msgPassMiddleware)
                 {
-                    Serilog.Log.Verbose($"NodeNet node localhost:{GetNodeTcpPort()} | Message received");
-                    MessageReceived?.Invoke(msgContext);
-                    if (msgContext.Message.Info.ReceiverPublicKey == SignOptions.PublicKey)
-                    {
-                        PersonalMessageReceived?.Invoke(msgContext);
-                        Serilog.Log.Verbose($"NodeNet node localhost:{GetNodeTcpPort()} | Personal message received");
-                    }
                     if (AutoRepeater is true && message.TimeToLive > 0)
                     {
                         var connections = Connections.Connections();
@@ -165,13 +158,30 @@ namespace NodeNet.NodeNet
                         foreach (var connection in connections)
                             connection.SendMessage(message);
                     }
+                    Serilog.Log.Verbose($"NodeNet node localhost:{GetNodeTcpPort()} | Message received");
+                    foreach (var handler in MessageReceived.GetInvocationList())
+                    {
+                        try
+                        {
+                            handler.DynamicInvoke(msgContext);
+                        }
+                        catch (Exception ex)
+                        {
+                            // Логирование или обработка исключения
+                            Console.WriteLine($"Error in handler: {ex.Message}");
+                        }
+                    }
+                    if (msgContext.Message.Info.ReceiverPublicKey == SignOptions.PublicKey)
+                    {
+                        PersonalMessageReceived?.Invoke(msgContext);
+                        Serilog.Log.Verbose($"NodeNet node localhost:{GetNodeTcpPort()} | Personal message received");
+                    }
                 }
                 else
                 {
                     InvalidMessageReceived?.Invoke(msgContext);
                 }
             });
-            thread.Start();
         }
 
         public ICollection<INodeConnection>? GetNodeConnections()
